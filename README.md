@@ -1,6 +1,5 @@
 # Casa-Teresa-e-Jorge
 
-<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
@@ -26,7 +25,7 @@
   <div class="max-w-5xl mx-auto">
     <header class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
       <div>
-        <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900 text-center sm:text-left">Portaria - Segunda Sem Leite 🥛🚫</h1>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900 text-center sm:text-left">Portaria - Casa Teresa e Jorge 🟩🩷</h1>
         <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-3">
           <label class="text-sm text-gray-500">Dia:</label>
           <input id="currentDate" type="date" class="border rounded-md px-2 py-1 text-sm" />
