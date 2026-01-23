@@ -1,445 +1,278 @@
-[<html lang="pt-BR">
+<!DOCTYPE html>
+<html lang="pt-BR">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Portaria -  Casa Teresa e Jorge🟩🩷 (Relatório Profissional)</title>
+<title>Portaria - Casa Teresa e Jorge 🟩🩷</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
-
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
-
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
 <style>
-  .btn {
-  @apply px-3 py-2 rounded-xl text-white shadow-md transition-all duration-200;
-}
+  .btn { @apply px-3 py-2 rounded-xl text-white shadow-md transition-all duration-200 active:scale-95; }
   .small { font-size: .85rem; }
-  .table-fixed td, .table-fixed th { vertical-align: middle; }
-  /* Estilo para esconder o valor sem quebrar o layout */
-  .hidden-value { filter: blur(5px); pointer-events: none; user-select: none; }
+  .hidden-value { filter: blur(6px); pointer-events: none; user-select: none; }
+  /* Garante que o painel de relatório não quebre no mobile */
+  #reportPanel { min-width: 320px; }
+  /* Ajuste fino para o título não quebrar */
+  .title-nowrap { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 </style>
 </head>
-<body class="bg-gray-50 min-h-screen p-4 md:p-8">
+<body class="bg-gray-50 min-h-screen p-2 md:p-8 text-gray-800">
 
   <div class="max-w-6xl mx-auto">
-
-    <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-      <div class="flex items-center gap-4">
-        <div>
-          <h1 class="text-2xl md:text-3xl font-extrabold"> Casa Teresa e Jorge🟩🩷</h1>
-          <div class="text-sm text-gray-500">Controle de entradas, arrecadação e relatórios profissionais</div>
-        </div>
+    <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6 bg-white p-4 rounded-xl shadow-sm">
+      <div class="overflow-hidden">
+        <h1 class="text-lg sm:text-xl md:text-2xl font-black title-nowrap">
+          Casa Teresa e Jorge <span class="inline-block">🟩🩷</span>
+        </h1>
+        <div class="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Gestão de Portaria Profissional</div>
       </div>
 
-      <div class="flex gap-3 items-center">
-        <label class="small text-gray-600">Dia:</label>
-        <input id="currentDate" type="date" class="border rounded px-2 py-1" />
-        <button id="saveDay" class="btn bg-green-600 hover:bg-green-700 small">Salvar</button>
-        <button id="resetDay" class="btn bg-red-600 hover:bg-red-700 small">Resetar</button>
+      <div class="flex gap-2 items-center bg-gray-50 p-1.5 rounded-lg border border-gray-100 self-end md:self-auto">
+        <input id="currentDate" type="date" class="border-0 bg-transparent text-xs font-bold focus:ring-0" />
+        <button id="resetDay" class="text-red-400 hover:text-red-600 px-2" title="Resetar Dia">🗑️</button>
       </div>
     </header>
 
     <main class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-      <section class="bg-white p-4 rounded-xl shadow col-span-1">
-        <h2 class="font-semibold mb-2">Registrar entrada</h2>
-
-        <div id="buttonsContainer" class="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3"></div>
-
-        <div class="flex gap-2">
-          <button id="exportCSV" class="btn bg-indigo-600 hover:bg-indigo-700 small">Exportar CSV</button>
-          <button id="generateReport" class="btn bg-blue-600 hover:bg-blue-700 small">Gerar Relatório (PDF)</button>
+      
+      <section class="bg-white p-4 rounded-xl shadow col-span-1 border-t-4 border-blue-500">
+        <h2 class="font-bold text-gray-700 mb-4 flex items-center gap-2">📝 Lançar Entrada</h2>
+        <div id="buttonsContainer" class="grid grid-cols-2 gap-2 mb-6"></div>
+        <div class="space-y-2 border-t pt-4">
+          <button id="generateReport" class="w-full btn bg-blue-600 font-bold text-sm">📄 GERAR RELATÓRIO PDF</button>
+          <button id="exportCSV" class="w-full btn bg-slate-500 small opacity-70">Exportar CSV</button>
         </div>
       </section>
 
-      <section class="bg-white p-4 rounded-xl shadow col-span-2">
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div class="flex gap-4">
-            <div class="bg-gray-100 p-3 rounded-lg text-center min-w-[100px]">
-              <div class="text-xs text-gray-500 uppercase font-bold mb-1">Pessoas</div>
-              <div id="totalPeople" class="text-2xl font-bold">0</div>
-            </div>
-            
-            <div class="bg-gray-100 p-3 rounded-lg text-center min-w-[140px] relative">
-              <div class="flex items-center justify-center gap-2 mb-1">
-                 <span class="text-xs text-gray-500 uppercase font-bold">Valor Total</span>
-                 <button id="toggleValue" class="text-sm opacity-60 hover:opacity-100 transition-opacity" title="Mostrar/Ocultar valor">
-                    <span id="eyeIcon">👁️</span>
-                 </button>
-              </div>
-              <div id="totalCollected" class="text-2xl font-bold">R$ 0,00</div>
-            </div>
+      <section class="bg-white p-4 rounded-xl shadow col-span-2 border-t-4 border-emerald-500">
+        <div class="grid grid-cols-2 gap-4 mb-6">
+          <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-100">
+            <div class="text-[10px] text-emerald-600 font-bold uppercase">Público Total</div>
+            <div id="totalPeople" class="text-2xl font-black text-emerald-900">0</div>
           </div>
-
-          <div class="flex gap-2">
-            <button id="openReportPanel" class="btn bg-emerald-600 hover:bg-emerald-700 small">Painel de Relatório</button>
-            <button id="toggleTable" class="btn bg-slate-600 hover:bg-slate-700 small">Mostrar/Ocultar Tabela</button>
+          <div class="bg-blue-50 p-3 rounded-xl border border-blue-100 relative">
+            <div class="flex justify-between items-center">
+              <div class="text-[10px] text-blue-600 font-bold uppercase">Caixa</div>
+              <button id="toggleValue" class="text-lg leading-none"> <span id="eyeIcon">👁️</span> </button>
+            </div>
+            <div id="totalCollected" class="text-2xl font-black text-blue-900">R$ 0,00</div>
           </div>
         </div>
 
-        <div id="tableWrapper" class="mt-4 overflow-x-auto">
-          <table class="min-w-full table-fixed text-sm bg-white">
-            <thead class="bg-gray-50">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="font-bold text-gray-700 text-sm italic">Fluxo de Entradas</h3>
+          <button id="toggleTable" class="text-[10px] font-bold bg-gray-100 px-2 py-1 rounded text-gray-500">LISTA</button>
+        </div>
+
+        <div id="tableWrapper" class="overflow-x-auto rounded-lg">
+          <table class="min-w-full text-xs">
+            <thead class="bg-gray-50 text-gray-400 uppercase">
               <tr>
-                <th class="p-2">Hora</th>
-                <th class="p-2">Tipo</th>
+                <th class="p-2 text-left">Hora</th>
+                <th class="p-2 text-left">Tipo</th>
                 <th class="p-2 text-right">Valor</th>
-                <th class="p-2 text-center">Pessoas</th>
-                <th class="p-2">Ações</th>
+                <th class="p-2 text-center">Ações</th>
               </tr>
             </thead>
-            <tbody id="entriesBody"></tbody>
+            <tbody id="entriesBody" class="divide-y divide-gray-50"></tbody>
           </table>
         </div>
       </section>
 
-      <section id="reportPanel" class="bg-white p-4 rounded-xl shadow col-span-3 hidden">
-        <div class="flex items-center justify-between mb-4 gap-4">
-          <h2 class="font-semibold">Relatório Profissional - Resumo do Dia</h2>
-          <div class="flex gap-2">
-            <button id="downloadPdf" class="btn bg-cyan-600 hover:bg-cyan-700 small">Salvar PDF</button>
-            <button id="closeReport" class="btn bg-gray-500 hover:bg-gray-600 small">Fechar</button>
+      <section id="reportPanel" class="bg-white p-6 rounded-xl shadow-2xl col-span-3 hidden border-b-8 border-emerald-500">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 border-b pb-4">
+          <div>
+            <h2 class="text-xl font-black text-gray-800 uppercase italic">Fechamento de Caixa</h2>
+            <p class="text-xs text-gray-400">Casa Teresa e Jorge</p>
+          </div>
+          <div class="flex gap-2 w-full sm:w-auto">
+            <button id="downloadPdf" class="flex-1 btn bg-emerald-600 font-bold text-xs">💾 BAIXAR PDF</button>
+            <button id="closeReport" class="btn bg-gray-400 text-xs">FECHAR</button>
           </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div>
-            <div class="text-sm text-gray-600 mb-1">Resumo</div>
-            <div id="reportSummary" class="bg-gray-50 p-3 rounded"></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div id="reportSummary" class="space-y-2 text-sm bg-gray-50 p-4 rounded-xl border"></div>
+          <div id="reportTotals" class="space-y-1"></div>
+          <div class="col-span-1 md:col-span-2 flex justify-center py-4 bg-white">
+            <div style="width: 100%; max-width: 380px;">
+              <canvas id="reportChart"></canvas>
+            </div>
           </div>
-
-          <div>
-            <div class="text-sm text-gray-600 mb-1">Totais por forma de pagamento</div>
-            <div id="reportTotals" class="bg-gray-50 p-3 rounded"></div>
-          </div>
-        </div>
-
-        <div>
-          <canvas id="reportChart" height="140"></canvas>
         </div>
       </section>
-
     </main>
   </div>
 
 <script>
-/* TIPOS */
 const PRICE_TYPES = [
-  { id: "20", label: "Dinheiro - R$20 Individual", price: 20, people: 1, kind: "Dinheiro" },
-  { id: "30", label: "Dinheiro -  R$30 Individual", price: 30, people: 1, kind: "Dinheiro" },
-  { id: "50", label: "Dinheiro - R$50 Dupla", price: 50, people: 2, kind: "Dinheiro" },
-
-  { id: "20_cartao", label: "Cartão - R$20 Individual", price: 20, people: 1, kind: "Crédito" },
-  { id: "30_cartao", label: "Cartão - R$30 Individual", price: 30, people: 1, kind: "Crédito" },
-  { id: "30_cartao", label: "Cartão - R$30 Dupla", price: 30, people: 2, kind: "Crédito" },
-  { id: "50_cartao", label: "Cartão- R$50 Dupla", price: 50, people: 2, kind: "Crédito" },
-
-  { id: "20_pix", label: "Pix - R$20 Individual", price: 20, people: 1, kind: "Pix" },
-  { id: "30_pix", label: "Pix - R$30 Individual", price: 20, people: 1, kind: "Pix" },
-  { id: "30_pix", label: "Pix - R$30 Dupla", price: 30, people: 2, kind: "Pix" },
-  { id: "50_pix", label: "Pix - R$50 Dupla", price: 50, people: 2, kind: "Pix" },
-
-  { id: "free100", label: "Free 100 Pessoas", price: 0, people: 1, kind: "Gratuidade" },
-  { id: "free", label: "Lista (Free)", price: 0, people: 1, kind: "Gratuidade" },
-  { id: "militar", label: "Militar", price: 0, people: 1, kind: "Gratuidade" },
-  { id: "aniversario", label: "Aniversário", price: 0, people: 1, kind: "Gratuidade" }
+  { id: "20_din", label: "Dinheiro R$20", price: 20, people: 1, kind: "Dinheiro" },
+  { id: "30_din", label: "Dinheiro R$30", price: 30, people: 1, kind: "Dinheiro" },
+  { id: "50_din", label: "Dinheiro R$50", price: 50, people: 2, kind: "Dinheiro" },
+  { id: "20_cart", label: "Cartão R$20", price: 20, people: 1, kind: "Cartão" },
+  { id: "30_cart", label: "Cartão R$30", price: 30, people: 1, kind: "Cartão" },
+  { id: "50_cart", label: "Cartão R$50", price: 50, people: 2, kind: "Cartão" },
+  { id: "30_pix", label: "Pix R$30", price: 30, people: 1, kind: "Pix" },
+  { id: "50_pix", label: "Pix R$50", price: 50, people: 2, kind: "Pix" },
+  { id: "free100", label: "100 Pessoas FREE", price: 0, people: 100, kind: "Gratuidade" },
+  { id: "free", label: "Lista (Individual)", price: 0, people: 1, kind: "Gratuidade" },
+  { id: "militar", label: "Militar / Aniv.", price: 0, people: 1, kind: "Gratuidade" }
 ];
 
-/* BOTÕES */
 const buttonsContainer = document.getElementById('buttonsContainer');
 PRICE_TYPES.forEach(p => {
   const b = document.createElement('button');
-  b.className = 'px-3 py-2 rounded-xl text-white text-sm shadow-md transition-all duration-200';
-
-  if (p.kind === "Dinheiro") {
-    b.classList.add("text-xs");
-    b.classList.add("bg-green-600", "hover:bg-green-700");
-  } else if (p.kind === "Crédito") {
-    b.classList.add("bg-yellow-400", "hover:bg-yellow-700", "text-black");
-  } else if (p.kind === "Débito") {
-    b.classList.add("bg-blue-600", "hover:bg-blue-700");
-  } else if (p.kind === "Pix") {
-    b.classList.add("bg-gray-600", "hover:bg-gray-700");
-  } else {
-    b.classList.add("bg-slate-400", "hover:bg-slate-700");
-  }
-
+  b.className = 'p-2 rounded-lg text-white text-[10px] font-black shadow uppercase tracking-tighter';
+  if (p.kind === "Dinheiro") b.classList.add("bg-green-600");
+  else if (p.kind === "Cartão") b.classList.add("bg-amber-500");
+  else if (p.kind === "Pix") b.classList.add("bg-cyan-600");
+  else if (p.id === "free100") b.classList.add("bg-purple-600");
+  else b.classList.add("bg-gray-400");
+  
   b.textContent = p.label;
   b.onclick = () => addEntry(p.id);
   buttonsContainer.appendChild(b);
 });
 
-/* VARIÁVEIS */
-const todayKey = () => new Date().toISOString().slice(0,10);
-const storageKey = d => `portaria_${d}`;
-
-let currentDate = todayKey();
+let currentDate = new Date().toISOString().slice(0,10);
 let entries = [];
-let isValueVisible = true; // Controle de visibilidade
+let isValueVisible = true;
+let reportChart = null;
 
 const currentDateEl = document.getElementById('currentDate');
-const entriesBody = document.getElementById('entriesBody');
-const totalPeopleEl = document.getElementById('totalPeople');
-const totalCollectedEl = document.getElementById('totalCollected');
-const toggleValueBtn = document.getElementById('toggleValue');
-const eyeIcon = document.getElementById('eyeIcon');
-
-const reportPanel = document.getElementById('reportPanel');
-const reportSummary = document.getElementById('reportSummary');
-const reportTotals = document.getElementById('reportTotals');
-const reportChartEl = document.getElementById('reportChart').getContext('2d');
-
-let reportChart = null;
 currentDateEl.value = currentDate;
 
-/* Lógica do Olho */
-toggleValueBtn.onclick = () => {
-    isValueVisible = !isValueVisible;
-    eyeIcon.textContent = isValueVisible ? '👁️' : '🙈';
-    totalCollectedEl.classList.toggle('hidden-value', !isValueVisible);
+document.getElementById('toggleValue').onclick = () => {
+  isValueVisible = !isValueVisible;
+  document.getElementById('eyeIcon').textContent = isValueVisible ? '👁️' : '🙈';
+  document.getElementById('totalCollected').classList.toggle('hidden-value', !isValueVisible);
+  document.querySelectorAll('.val-td').forEach(td => td.classList.toggle('hidden-value', !isValueVisible));
 };
 
-/* LOAD */
-function loadEntries() {
-  const raw = localStorage.getItem(storageKey(currentDate));
-  entries = raw ? JSON.parse(raw) : [];
-  renderEntries();
+function load() {
+  const data = localStorage.getItem(`pj_ctj_${currentDate}`);
+  entries = data ? JSON.parse(data) : [];
+  render();
 }
 
-function saveEntries() {
-  localStorage.setItem(storageKey(currentDate), JSON.stringify(entries));
-}
-
-/* RENDER TABELA */
-function renderEntries() {
-  entriesBody.innerHTML = entries.length ? entries.map(e => `
-    <tr class="border-t">
-      <td class="p-2">${new Date(e.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</td>
-      <td class="p-2">${e.type}</td>
-      <td class="p-2 text-right">R$ ${e.price.toFixed(2)}</td>
-      <td class="p-2 text-center">${e.people}</td>
-      <td class="p-2 flex gap-2">
-        <button class="px-2 py-1 bg-yellow-500 text-white rounded text-xs" onclick="editEntry(${e.id})">Editar</button>
-        <button class="px-2 py-1 bg-red-500 text-white rounded text-xs" onclick="deleteEntry(${e.id})">Excluir</button>
+function render() {
+  const body = document.getElementById('entriesBody');
+  const blur = isValueVisible ? '' : 'hidden-value';
+  
+  body.innerHTML = entries.map(e => `
+    <tr>
+      <td class="p-2 text-gray-400 font-mono">${new Date(e.ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</td>
+      <td class="p-2 font-bold text-gray-600">${e.type}</td>
+      <td class="p-2 text-right font-black val-td ${blur}">R$ ${e.price.toFixed(2)}</td>
+      <td class="p-2 text-center">
+        <button onclick="deleteEntry(${e.id})" class="text-red-300 hover:text-red-500">✕</button>
       </td>
-    </tr>`).join('') :
-    `<tr><td colspan="5" class="text-center p-4 text-gray-400">Nenhum registro</td></tr>`;
+    </tr>
+  `).join('');
 
-  const totals = entries.reduce((acc, e) => {
-    acc.people += e.people;
-    acc.collected += e.price;
-    return acc;
-  }, { people:0, collected:0 });
-
-  totalPeopleEl.textContent = totals.people;
-  totalCollectedEl.textContent = `R$ ${totals.collected.toFixed(2)}`;
+  const totals = entries.reduce((a, b) => ({ p: a.p + b.people, v: a.v + b.price }), { p: 0, v: 0 });
+  document.getElementById('totalPeople').textContent = totals.p;
+  document.getElementById('totalCollected').textContent = `R$ ${totals.v.toFixed(2)}`;
 }
 
-/* ADD ENTRY */
 function addEntry(id) {
-  const t = PRICE_TYPES.find(p => p.id === id);
-  if (!t) return;
-
-  entries.unshift({
-    id: Date.now(),
-    timestamp: new Date().toISOString(),
-    type: t.label,
-    price: t.price,
-    people: t.people,
-    kind: t.kind
-  });
-
-  saveEntries();
-  renderEntries();
+  const t = PRICE_TYPES.find(x => x.id === id);
+  entries.unshift({ id: Date.now(), ts: new Date().toISOString(), type: t.label, price: t.price, people: t.people, kind: t.kind });
+  localStorage.setItem(`pj_ctj_${currentDate}`, JSON.stringify(entries));
+  render();
 }
 
-/* DELETE */
-function deleteEntry(id) {
-  if (!confirm('Deseja excluir este registro?')) return;
-  entries = entries.filter(x => x.id !== id);
-  saveEntries();
-  renderEntries();
-}
+window.deleteEntry = (id) => {
+  if(!confirm('Excluir registro?')) return;
+  entries = entries.filter(e => e.id !== id);
+  localStorage.setItem(`pj_ctj_${currentDate}`, JSON.stringify(entries));
+  render();
+};
 
-/* EDIT */
-function editEntry(id) {
-  const item = entries.find(x => x.id === id);
-  if (!item) return;
+document.getElementById('generateReport').onclick = () => {
+  document.getElementById('reportPanel').classList.remove('hidden');
+  generateVisual();
+  document.getElementById('reportPanel').scrollIntoView({ behavior: 'smooth' });
+};
 
-  const newPrice = prompt('Editar preço (somente números):', item.price);
-  if (newPrice === null) return;
-
-  const newPeople = prompt('Editar número de pessoas:', item.people);
-  if (newPeople === null) return;
-
-  item.price = Number(newPrice) || 0;
-  item.people = Number(newPeople) || 0;
-
-  saveEntries();
-  renderEntries();
-}
-
-/* CSV */
-document.getElementById('exportCSV').addEventListener('click', () => {
-  const headers = ['timestamp','type','price','people'];
-  const rows = entries.map(e => [e.timestamp, e.type, e.price, e.people]);
-  const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
-
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `portaria_${currentDate}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-});
-
-/* RESET */
-document.getElementById('resetDay').addEventListener('click', () => {
-  if (!confirm('Deseja realmente limpar todos os registros do dia?')) return;
-  entries = [];
-  saveEntries();
-  renderEntries();
-});
-
-document.getElementById('saveDay').addEventListener('click', () => saveEntries());
-
-/* RELATÓRIO */
-document.getElementById('openReportPanel').addEventListener('click', () => {
-  reportPanel.classList.remove('hidden');
-  generateReportVisual();
-});
-
-document.getElementById('closeReport').addEventListener('click', () => {
-  reportPanel.classList.add('hidden');
-});
-
-/* TABELA */
-document.getElementById('toggleTable').addEventListener('click', () => {
-  const w = document.getElementById('tableWrapper');
-  w.style.display = (w.style.display === 'none') ? 'block' : 'none';
-});
-
-/* GERAR RESUMO + GRÁFICO COM VALORES */
-function generateReportVisual() {
-  const totals = entries.reduce((a,e) => {
-    a.people += e.people;
-    a.collected += e.price;
-    return a;
-  }, { people:0, collected:0 });
-
+function generateVisual() {
+  const totals = entries.reduce((a, b) => ({ p: a.p + b.people, v: a.v + b.price }), { p: 0, v: 0 });
   const byKind = {};
   entries.forEach(e => {
-    byKind[e.kind] = byKind[e.kind] || { count:0, collected:0 };
-    byKind[e.kind].count += e.people;
-    byKind[e.kind].collected += e.price;
+    byKind[e.kind] = byKind[e.kind] || { p: 0, v: 0 };
+    byKind[e.kind].p += e.people;
+    byKind[e.kind].v += e.price;
   });
 
-  const first = entries.length ? new Date(entries[entries.length-1].timestamp).toLocaleTimeString() : '-';
-  const last = entries.length ? new Date(entries[0].timestamp).toLocaleTimeString() : '-';
-  const avg = totals.people ? (totals.collected / totals.people) : 0;
-
-  reportSummary.innerHTML = `
-    <div class="text-sm">
-      <p><strong>Data:</strong> ${currentDate}</p>
-      <p><strong>Valor Total:</strong> R$ ${totals.collected.toFixed(2)}</p>
-      <p><strong>Total de pessoas:</strong> ${totals.people}</p>
-      <p><strong>Primeira entrada:</strong> ${first}</p>
-      <p><strong>Última entrada:</strong> ${last}</p>
-      <p><strong>Média por pessoa:</strong> R$ ${avg.toFixed(2)}</p>
-    </div>
+  document.getElementById('reportSummary').innerHTML = `
+    <h3 class="font-black text-emerald-700 uppercase border-b mb-2">Resumo Financeiro</h3>
+    <p class="flex justify-between">Data: <b>${currentDate.split('-').reverse().join('/')}</b></p>
+    <p class="flex justify-between">Público Total: <b>${totals.p} pessoas</b></p>
+    <p class="flex justify-between text-lg">Total Líquido: <b>R$ ${totals.v.toFixed(2)}</b></p>
   `;
 
-  let totalsHtml = '<div class="grid grid-cols-1 gap-2">';
-  Object.keys(byKind).forEach(k => {
-    totalsHtml += `<div class="flex justify-between">
-      <div class="text-sm">${k}</div>
-      <div class="font-semibold">R$ ${byKind[k].collected.toFixed(2)} / ${byKind[k].count}p</div>
-    </div>`;
-  });
-  totalsHtml += '</div>';
-  reportTotals.innerHTML = totalsHtml || '<div class="text-sm text-gray-500">Sem registros</div>';
+  document.getElementById('reportTotals').innerHTML = Object.entries(byKind).map(([k, v]) => `
+    <div class="flex justify-between border-b py-2 text-xs">
+      <span class="text-gray-400 font-bold uppercase">${k}</span>
+      <span class="font-black">R$ ${v.v.toFixed(2)} (${v.p}p)</span>
+    </div>
+  `).join('');
 
-  const labels = Object.keys(byKind);
-  const data = labels.map(l => byKind[l].collected);
-
-  if (reportChart) { reportChart.destroy(); reportChart = null; }
-
-  reportChart = new Chart(reportChartEl, {
+  if(reportChart) reportChart.destroy();
+  const ctx = document.getElementById('reportChart').getContext('2d');
+  reportChart = new Chart(ctx, {
     type: 'doughnut',
     data: {
-      labels,
-      datasets: [{ data, backgroundColor: ['#10B981','#06B6D4','#F59E0B','#6366F1','#F43F5E'] }]
+      labels: Object.keys(byKind),
+      datasets: [{ data: Object.values(byKind).map(x => x.v), backgroundColor: ['#10b981', '#f59e0b', '#06b6d4', '#8b5cf6', '#64748b'] }]
     },
     plugins: [ChartDataLabels],
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { position: 'right' },
-        datalabels: {
-          color: '#ffffff',
-          font: { weight: 'bold', size: 14 },
-          formatter: (value) => `R$ ${value.toFixed(2)}`
-        }
+    options: { 
+      plugins: { 
+        legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } },
+        datalabels: { color: '#fff', font: { weight: 'bold', size: 10 }, formatter: (v) => v > 0 ? `R$${v}` : '' }
       }
     }
   });
 }
 
-/* PDF */
-document.getElementById('downloadPdf').addEventListener('click', async () => {
-  const panel = document.querySelector('#reportPanel');
-  const closeBtn = document.getElementById('closeReport');
-  const downloadBtn = document.getElementById('downloadPdf');
+document.getElementById('downloadPdf').onclick = async () => {
+  const btnPdf = document.getElementById('downloadPdf');
+  const btnClose = document.getElementById('closeReport');
+  btnPdf.style.display = 'none';
+  btnClose.style.display = 'none';
 
-  closeBtn.style.display = 'none';
-  downloadBtn.style.display = 'none';
+  await new Promise(r => setTimeout(r, 600));
 
-  await new Promise(r => setTimeout(r, 200));
-
-  const canvas = await html2canvas(panel, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+  const panel = document.getElementById('reportPanel');
+  const canvas = await html2canvas(panel, { scale: 2, useCORS: true });
+  
   const imgData = canvas.toDataURL('image/png');
-
-  closeBtn.style.display = '';
-  downloadBtn.style.display = '';
-
   const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+  const pdf = new jsPDF('p', 'mm', 'a4');
+  const imgW = 190;
+  const imgH = (canvas.height * imgW) / canvas.width;
 
-  const pageWidth = pdf.internal.pageSize.getWidth();
-  const margin = 20;
-  const imgProps = pdf.getImageProperties(imgData);
-  const imgWidth = pageWidth - margin*2;
-  const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+  pdf.setFontSize(14);
+  pdf.text(`RELATORIO CAIXA - ${currentDate}`, 10, 15);
+  pdf.addImage(imgData, 'PNG', 10, 20, imgW, imgH);
+  pdf.save(`caixa_${currentDate}.pdf`);
 
-  pdf.addImage(imgData, 'PNG', margin, margin, imgWidth, imgHeight);
-  pdf.setFontSize(10);
-  pdf.text(`Relatório gerado: ${new Date().toLocaleString()}`, margin, pdf.internal.pageSize.getHeight() - 10);
-
-  pdf.save(`relatorio_portaria_${currentDate}.pdf`);
-});
-
-/* DATA CHANGE */
-currentDateEl.onchange = e => {
-  currentDate = e.target.value;
-  loadEntries();
+  btnPdf.style.display = '';
+  btnClose.style.display = '';
 };
 
-function init() {
-  currentDateEl.value = currentDate;
-  loadEntries();
-  renderEntries();
-}
-init();
+document.getElementById('closeReport').onclick = () => document.getElementById('reportPanel').classList.add('hidden');
+document.getElementById('toggleTable').onclick = () => document.getElementById('tableWrapper').classList.toggle('hidden');
+document.getElementById('resetDay').onclick = () => { if(confirm('Zerar todos os lançamentos de hoje?')) { entries=[]; localStorage.removeItem(`pj_ctj_${currentDate}`); render(); } };
+currentDateEl.onchange = (e) => { currentDate = e.target.value; load(); };
 
-window.deleteEntry = deleteEntry;
-window.editEntry = editEntry;
-window.addEntry = addEntry;
-</script>](https://terrah08.github.io/Casa-Teresa-e-Jorge/)
-
+load();
+</script>
 </body>
 </html>
