@@ -99,12 +99,13 @@ const PRICE_TYPES = [
   { id: "20_cart", label: "Cartão R$20", sub: "Individual", price: 20, people: 1, kind: "Cartão" },
   { id: "30_cart", label: "Cartão R$30", sub: "Individual", price: 30, people: 1, kind: "Cartão" },
   { id: "50_cart", label: "Cartão R$50", sub: "Dupla", price: 50, people: 2, kind: "Cartão" },
+  { id: "20_pix", label: "Pix R$20", sub: "Individual", price: 20, people: 1, kind: "Pix" },
   { id: "30_pix", label: "Pix R$30", sub: "Individual", price: 30, people: 1, kind: "Pix" },
   { id: "50_pix", label: "Pix R$50", sub: "Dupla", price: 50, people: 2, kind: "Pix" },
-  { id: "f100", label: "100 Pessoas", sub: "FREE", price: 0, people: 100, kind: "Gratuidade" },
-  { id: "list", label: "Lista", sub: "Indiv.", price: 0, people: 1, kind: "Gratuidade" },
-  { id: "Aniv", label: "Aniversário", sub: "Isento", price: 0, people: 1, kind: "Gratuidade" },
-  { id: "milt", label: "Militar", sub: "Isento", price: 0, people: 1, kind: "Gratuidade" }
+  { id: "f100", label: "100 Pessoas", price: 0, people: 100, kind: "Gratuidade" },
+  { id: "list", label: "Lista", price: 0, people: 1, kind: "Gratuidade" },
+  { id: "Aniv", label: "Aniversário", price: 0, people: 1, kind: "Gratuidade" },
+  { id: "milt", label: "Militar", price: 0, people: 1, kind: "Gratuidade" }
 ];
 
 let entries = [];
