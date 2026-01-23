@@ -14,6 +14,7 @@
   .btn { @apply px-3 py-2 rounded-xl text-white shadow-md transition-all duration-200 active:scale-95 flex items-center justify-center gap-2; }
   .hidden-value { filter: blur(6px); pointer-events: none; user-select: none; }
   #chartWrapper { width: 100%; max-width: 300px; margin: 0 auto; }
+  .btn-disabled { @apply bg-gray-300 shadow-none cursor-not-allowed scale-100 opacity-60 !important; }
 </style>
 </head>
 <body class="bg-gray-50 min-h-screen p-2 md:p-8 text-gray-800 font-sans">
@@ -33,7 +34,7 @@
     <main class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       
       <section class="bg-white p-4 rounded-xl shadow col-span-1 border-t-4 border-blue-500 h-fit">
-        <h2 class="font-bold text-gray-400 text-[10px] uppercase mb-4">Lançamentos</h2>
+        <h2 class="font-bold text-gray-400 text-[10px] uppercase mb-4">Registros</h2>
         <div id="buttonsContainer" class="grid grid-cols-2 gap-2 mb-6"></div>
         <button id="btnOpenReport" class="w-full btn bg-blue-600 font-bold py-3 text-sm">
           <span>📄 GERAR RELATÓRIO PDF</span>
@@ -42,20 +43,20 @@
 
       <section class="bg-white p-4 rounded-xl shadow col-span-2 border-t-4 border-emerald-500">
         <div class="grid grid-cols-2 gap-4 mb-6">
-          <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-100">
-            <div class="text-[10px] text-emerald-600 font-bold uppercase">Público Atual</div>
-            <div id="totalPeople" class="text-3xl font-black text-emerald-900">0</div>
+          <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-100 text-center">
+            <div class="text-[10px] text-emerald-600 font-bold uppercase">Público</div>
+            <div id="totalPeople" class="text-4xl font-black text-emerald-900">0</div>
           </div>
-          <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 relative">
-            <div class="flex justify-between items-center">
-              <div class="text-[10px] text-blue-600 font-bold uppercase">Caixa Total</div>
-              <button onclick="toggleBlur()" class="text-lg"> <span id="eyeIcon">👁️</span> </button>
+          <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 relative text-center">
+            <div class="flex justify-between items-center px-2">
+              <div class="text-[10px] text-blue-600 font-bold uppercase">Caixa</div>
+              <button onclick="toggleBlur()" class="text-sm"> <span id="eyeIcon">👁️</span> </button>
             </div>
-            <div id="totalCollected" class="text-3xl font-black text-blue-900">R$ 0,00</div>
+            <div id="totalCollected" class="text-4xl font-black text-blue-900">R$ 0,00</div>
           </div>
         </div>
 
-        <div class="overflow-hidden rounded-xl border border-gray-100">
+        <div class="overflow-hidden rounded-xl border border-gray-100 bg-white">
           <table class="w-full text-xs text-left">
             <thead class="bg-gray-50 text-gray-400 uppercase font-bold">
               <tr>
@@ -70,28 +71,20 @@
         </div>
       </section>
 
-      <section id="reportPanel" class="bg-white p-6 rounded-xl shadow-2xl col-span-3 hidden border-b-8 border-emerald-600 animate-pulse-once">
+      <section id="reportPanel" class="bg-white p-6 rounded-xl shadow-2xl col-span-3 hidden border-b-8 border-emerald-600">
         <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4 border-b pb-4">
-          <h2 class="text-xl font-black uppercase italic">Relatório de Fechamento</h2>
+          <h2 class="text-xl font-black uppercase italic text-gray-700">Conferência de Fechamento</h2>
           <div class="flex gap-2 w-full sm:w-auto">
-            <button id="downloadPdf" class="btn bg-emerald-600 font-bold flex-1 px-6 italic tracking-tight text-xs sm:text-sm">💾 BAIXAR PDF OFICIAL</button>
+            <button id="downloadPdf" class="btn bg-emerald-600 font-bold flex-1 px-6 text-sm">💾 BAIXAR PDF</button>
             <button onclick="document.getElementById('reportPanel').classList.add('hidden')" class="btn bg-gray-400 px-4">X</button>
           </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div id="reportSummary" class="bg-gray-50 p-5 rounded-2xl border space-y-3 shadow-inner"></div>
-          
-          <div class="space-y-4">
-            <h3 class="text-xs font-black text-gray-400 uppercase tracking-tighter">Divisão por Pagamento</h3>
-            <div id="reportTotals" class="space-y-1"></div>
-          </div>
-
-          <div class="text-center">
-            <h3 class="text-xs font-black text-gray-400 uppercase mb-4 tracking-tighter">Impacto Visual (Público/R$)</h3>
-            <div id="chartWrapper">
-              <canvas id="reportChart"></canvas>
-            </div>
+          <div id="reportSummary" class="bg-gray-50 p-5 rounded-2xl border space-y-3"></div>
+          <div id="reportTotals" class="space-y-1"></div>
+          <div id="chartWrapper">
+            <canvas id="reportChart"></canvas>
           </div>
         </div>
       </section>
@@ -110,7 +103,7 @@ const PRICE_TYPES = [
   { id: "20_pix", label: "Pix R$20", sub: "Individual", price: 20, people: 1, kind: "Pix" },
   { id: "30_pix", label: "Pix R$30", sub: "Individual", price: 30, people: 1, kind: "Pix" },
   { id: "50_pix", label: "Pix R$50", sub: "Dupla", price: 50, people: 2, kind: "Pix" },
-  { id: "f100", label: "100 Pessoas", sub: "", price: 0, people: 1, kind: "Gratuidade" },
+  { id: "f100", label: "100 Pessoas", sub: "FREE", price: 0, people: 1, kind: "Gratuidade", isCounter: true, limit: 100 },
   { id: "list", label: "Lista", sub: "", price: 0, people: 1, kind: "Gratuidade" },
   { id: "Aniv", label: "Aniversário", sub: "", price: 0, people: 1, kind: "Gratuidade" },
   { id: "milt", label: "Militar", sub: "", price: 0, people: 1, kind: "Gratuidade" }
@@ -121,21 +114,38 @@ let isValueVisible = true;
 let chartInstance = null;
 let currentDate = new Date().toISOString().slice(0,10);
 
-const container = document.getElementById('buttonsContainer');
-PRICE_TYPES.forEach(p => {
-  const b = document.createElement('button');
-  b.className = `p-2 h-14 rounded-lg text-white flex flex-col items-center justify-center transition-all ${p.kind === 'Dinheiro' ? 'bg-green-600 shadow-green-200' : p.kind === 'Cartão' ? 'bg-amber-500 shadow-amber-200' : p.kind === 'Pix' ? 'bg-cyan-600 shadow-cyan-200' : 'bg-gray-400 shadow-gray-200'}`;
+function renderButtons() {
+  const container = document.getElementById('buttonsContainer');
+  container.innerHTML = '';
   
-  let subHtml = "";
-  if (p.sub) {
-      const isDestaque = p.sub === "Individual" || p.sub === "Dupla";
-      subHtml = `<span class="text-[9px] mt-1 ${isDestaque ? 'font-black bg-black/20 px-2 rounded-full border border-white/20' : 'opacity-80'}">${p.sub}</span>`;
-  }
+  // Contar quantas pessoas já entraram pelo botão "100 Pessoas"
+  const count100 = entries.filter(e => e.type.includes("100 Pessoas")).length;
 
-  b.innerHTML = `<span class="text-[10px] font-black uppercase leading-none">${p.label}</span>${subHtml}`;
-  b.onclick = () => addEntry(p);
-  container.appendChild(b);
-});
+  PRICE_TYPES.forEach(p => {
+    const b = document.createElement('button');
+    let label = p.label;
+    let sub = p.sub;
+    let disabled = false;
+
+    if (p.isCounter) {
+        const rest = p.limit - count100;
+        sub = rest > 0 ? `Restam ${rest}` : "ESGOTADO";
+        if (rest <= 0) disabled = true;
+    }
+
+    b.className = `p-2 h-14 rounded-lg text-white flex flex-col items-center justify-center transition-all ${disabled ? 'btn-disabled' : (p.kind === 'Dinheiro' ? 'bg-green-600' : p.kind === 'Cartão' ? 'bg-amber-500' : p.kind === 'Pix' ? 'bg-cyan-600' : 'bg-gray-400')}`;
+    
+    let subHtml = "";
+    if (sub) {
+        const isDestaque = sub === "Individual" || sub === "Dupla" || p.isCounter;
+        subHtml = `<span class="text-[9px] mt-1 ${isDestaque ? 'font-black bg-black/20 px-2 rounded-full border border-white/10' : 'opacity-80'}">${sub}</span>`;
+    }
+
+    b.innerHTML = `<span class="text-[10px] font-black uppercase leading-none">${label}</span>${subHtml}`;
+    if (!disabled) b.onclick = () => addEntry(p);
+    container.appendChild(b);
+  });
+}
 
 function toggleBlur() { isValueVisible = !isValueVisible; document.getElementById('eyeIcon').textContent = isValueVisible ? '👁️' : '🙈'; render(); }
 
@@ -146,14 +156,15 @@ function load() {
 }
 
 function render() {
+  renderButtons();
   const body = document.getElementById('entriesBody');
   const blurClass = isValueVisible ? '' : 'hidden-value';
   body.innerHTML = entries.map(e => `
-    <tr>
+    <tr class="hover:bg-gray-50">
       <td class="p-3 text-gray-400 font-mono">${e.time}</td>
       <td class="p-3 font-bold text-gray-700 uppercase text-[10px]">${e.type}</td>
       <td class="p-3 text-right font-black ${blurClass}">R$ ${e.price.toFixed(2)}</td>
-      <td class="p-3 text-center"><button onclick="deleteEntry(${e.id})" class="text-red-300 px-2">✕</button></td>
+      <td class="p-3 text-center"><button onclick="deleteEntry(${e.id})" class="text-red-200 hover:text-red-500">✕</button></td>
     </tr>
   `).join('');
 
@@ -171,34 +182,32 @@ function addEntry(p) {
 }
 
 window.deleteEntry = (id) => {
-  if(confirm('Excluir Registro?')) { entries = entries.filter(e => e.id !== id); localStorage.setItem(`ctj_final_${currentDate}`, JSON.stringify(entries)); render(); }
+  if(confirm('Remover este registro?')) {
+    entries = entries.filter(e => e.id !== id);
+    localStorage.setItem(`ctj_final_${currentDate}`, JSON.stringify(entries));
+    render();
+  }
 };
 
 document.getElementById('btnOpenReport').onclick = () => {
-  if(entries.length === 0) return alert("Sem dados.");
+  if(entries.length === 0) return alert("Nenhum dado para o relatório.");
   document.getElementById('reportPanel').classList.remove('hidden');
-  
-  // Cálculo de Métricas
   const totals = entries.reduce((a, b) => ({ p: a.p + b.people, v: a.v + b.price }), { p: 0, v: 0 });
   const byKind = {};
-  const byKindPeople = {};
-  entries.forEach(e => { 
-    byKind[e.kind] = (byKind[e.kind] || 0) + e.price; 
-    byKindPeople[e.kind] = (byKindPeople[e.kind] || 0) + e.people;
-  });
-
+  entries.forEach(e => byKind[e.kind] = (byKind[e.kind] || 0) + e.price);
+  
   const times = entries.map(e => e.timestamp).sort();
-  const firstEntry = new Date(times[0]).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-  const lastEntry = new Date(times[times.length-1]).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  const first = new Date(times[0]).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  const last = new Date(times[times.length-1]).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
   const avg = totals.p > 0 ? (totals.v / totals.p).toFixed(2) : "0.00";
 
   document.getElementById('reportSummary').innerHTML = `
-    <h3 class="font-black text-emerald-700 uppercase text-[10px]">Métricas do Dia</h3>
-    <div class="flex justify-between text-sm"><span>Primeira Entrada:</span><b class="text-gray-700">${firstEntry}</b></div>
-    <div class="flex justify-between text-sm"><span>Última Entrada:</span><b class="text-gray-700">${lastEntry}</b></div>
-    <div class="flex justify-between text-sm border-t pt-2"><span>Público Total:</span><b>${totals.p}p</b></div>
-    <div class="flex justify-between text-sm"><span>Média por Pessoa:</span><b class="text-blue-600 underline">R$ ${avg}</b></div>
-    <div class="flex justify-between text-xl font-black mt-2 pt-2 border-t-2 border-emerald-100"><span>TOTAL CAIXA:</span><span class="text-emerald-600">R$ ${totals.v.toFixed(2)}</span></div>
+    <h3 class="font-black text-emerald-700 uppercase text-[10px] tracking-widest">Métricas</h3>
+    <div class="flex justify-between text-xs"><span>Início:</span><b>${first}</b></div>
+    <div class="flex justify-between text-xs"><span>Último:</span><b>${last}</b></div>
+    <div class="flex justify-between text-sm border-t pt-2 mt-2"><span>Público:</span><b>${totals.p}p</b></div>
+    <div class="flex justify-between text-sm"><span>Ticket Médio:</span><b class="text-blue-500">R$ ${avg}</b></div>
+    <div class="flex justify-between text-xl font-black mt-4 pt-2 border-t-2"><span>CAIXA:</span><span class="text-emerald-600">R$ ${totals.v.toFixed(2)}</span></div>
   `;
 
   document.getElementById('reportTotals').innerHTML = Object.entries(byKind).map(([k, v]) => `
@@ -208,19 +217,12 @@ document.getElementById('btnOpenReport').onclick = () => {
     </div>
   `).join('');
 
-  // Gráfico considerando faturamento por categoria + Gratuidades (por volume de pessoas)
   if(chartInstance) chartInstance.destroy();
   chartInstance = new Chart(document.getElementById('reportChart'), {
     type: 'doughnut',
-    data: {
-      labels: Object.keys(byKind),
-      datasets: [{ data: Object.values(byKind), backgroundColor: ['#10b981', '#f59e0b', '#06b6d4', '#e2e8f0'] }]
-    },
+    data: { labels: Object.keys(byKind), datasets: [{ data: Object.values(byKind), backgroundColor: ['#10b981', '#f59e0b', '#06b6d4', '#cbd5e1'] }] },
     plugins: [ChartDataLabels],
-    options: { 
-      responsive: true, animation: false,
-      plugins: { legend: { position: 'bottom', labels: { boxWidth: 8, font: { size: 9 } } }, datalabels: { color: '#000', font: { weight: 'bold', size: 9 }, formatter: v => v > 0 ? `R$${v.toFixed(0)}` : '' } }
-    }
+    options: { responsive: true, animation: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 9 } } }, datalabels: { color: '#000', font: { weight: 'bold', size: 9 }, formatter: v => v > 0 ? `R$${v.toFixed(0)}` : '' } } }
   });
   document.getElementById('reportPanel').scrollIntoView({ behavior: 'smooth' });
 };
@@ -231,45 +233,38 @@ document.getElementById('downloadPdf').onclick = () => {
   const totals = entries.reduce((a, b) => ({ p: a.p + b.people, v: a.v + b.price }), { p: 0, v: 0 });
   const byKind = {};
   entries.forEach(e => byKind[e.kind] = (byKind[e.kind] || 0) + e.price);
-  
   const times = entries.map(e => e.timestamp).sort();
-  const firstEntry = new Date(times[0]).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-  const lastEntry = new Date(times[times.length-1]).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-  const avg = totals.p > 0 ? (totals.v / totals.p).toFixed(2) : "0.00";
+  const first = new Date(times[0]).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  const last = new Date(times[times.length-1]).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
 
   doc.setFontSize(22); doc.text("CASA TERESA E JORGE", 105, 20, { align: "center" });
-  doc.setFontSize(10); doc.text(`FECHAMENTO: ${currentDate.split('-').reverse().join('/')}`, 105, 28, { align: "center" });
+  doc.setFontSize(10); doc.text(`DATA: ${currentDate.split('-').reverse().join('/')}`, 105, 28, { align: "center" });
   doc.line(15, 32, 195, 32);
 
   doc.setFontSize(12); doc.setFont(undefined, 'bold');
-  doc.text("CONSOLIDADO DE PERFORMANCE", 15, 45);
-  
+  doc.text("RESUMO CONSOLIDADO", 15, 45);
   doc.setFontSize(10); doc.setFont(undefined, 'normal');
-  doc.text(`Primeira Entrada: ${firstEntry}`, 15, 55);
-  doc.text(`Ultima Entrada: ${lastEntry}`, 15, 62);
-  doc.text(`Publico Total: ${totals.p} pessoas`, 15, 69);
-  doc.text(`Ticket Medio por Pessoa: R$ ${avg}`, 15, 76);
-
+  doc.text(`Primeira Entrada: ${first} | Ultima Entrada: ${last}`, 15, 55);
+  doc.text(`Publico Total: ${totals.p} pessoas`, 15, 62);
+  doc.text(`Ticket Medio: R$ ${(totals.v/totals.p).toFixed(2)}`, 15, 69);
+  
   doc.setFontSize(14); doc.setFont(undefined, 'bold');
   doc.setTextColor(16, 185, 129);
-  doc.text(`TOTAL EM CAIXA: R$ ${totals.v.toFixed(2)}`, 15, 90);
+  doc.text(`VALOR TOTAL EM CAIXA: R$ ${totals.v.toFixed(2)}`, 15, 85);
 
-  doc.setTextColor(0, 0, 0);
-  doc.setFontSize(11); doc.text("DETALHAMENTO POR PAGAMENTO:", 15, 105);
-  doc.setFont(undefined, 'normal');
-  let currentY = 115;
+  doc.setTextColor(0); doc.setFontSize(11);
+  doc.text("POR MEIO DE PAGAMENTO:", 15, 100);
+  let currentY = 110;
   Object.entries(byKind).forEach(([k, v]) => {
-    doc.text(`${k}:`, 20, currentY);
-    doc.text(`R$ ${v.toFixed(2)}`, 70, currentY);
+    doc.setFont(undefined, 'normal'); doc.text(`${k}:`, 20, currentY);
+    doc.setFont(undefined, 'bold'); doc.text(`R$ ${v.toFixed(2)}`, 70, currentY);
     currentY += 8;
   });
 
-  doc.setFontSize(8); doc.setTextColor(150);
-  doc.text(`Controle Portaria Digital - ${new Date().toLocaleString()}`, 105, 285, { align: "center" });
-
-  doc.save(`Fechamento_${currentDate}.pdf`);
+  doc.save(`Relatorio_${currentDate}.pdf`);
 };
 
+document.getElementById('resetDay').onclick = () => { if(confirm('Zerar portaria de hoje?')) { entries=[]; localStorage.removeItem(`ctj_final_${currentDate}`); render(); } };
 const dateEl = document.getElementById('currentDate');
 dateEl.value = currentDate;
 dateEl.onchange = (e) => { currentDate = e.target.value; load(); };
