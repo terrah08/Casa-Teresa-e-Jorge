@@ -102,10 +102,10 @@ const PRICE_TYPES = [
   { id: "20_pix", label: "Pix R$20", sub: "Individual", price: 20, people: 1, kind: "Pix" },
   { id: "30_pix", label: "Pix R$30", sub: "Individual", price: 30, people: 1, kind: "Pix" },
   { id: "50_pix", label: "Pix R$50", sub: "Dupla", price: 50, people: 2, kind: "Pix" },
-  { id: "f100", label: "100 Pessoas", price: 0, people: 100, kind: "Gratuidade" },
-  { id: "list", label: "Lista", price: 0, people: 1, kind: "Gratuidade" },
-  { id: "Aniv", label: "Aniversário", price: 0, people: 1, kind: "Gratuidade" },
-  { id: "milt", label: "Militar", price: 0, people: 1, kind: "Gratuidade" }
+  { id: "f100", label: "100 Pessoas", sub: "", price: 0, people: 100, kind: "Gratuidade" },
+  { id: "list", label: "Lista", sub: "", price: 0, people: 1, kind: "Gratuidade" },
+  { id: "Aniv", label: "Aniversário", sub: "", price: 0, people: 1, kind: "Gratuidade" },
+  { id: "milt", label: "Militar", sub: "", price: 0, people: 1, kind: "Gratuidade" }
 ];
 
 let entries = [];
@@ -116,8 +116,16 @@ let currentDate = new Date().toISOString().slice(0,10);
 const container = document.getElementById('buttonsContainer');
 PRICE_TYPES.forEach(p => {
   const b = document.createElement('button');
-  b.className = `p-2 h-14 rounded-lg text-white flex flex-col items-center justify-center ${p.kind === 'Dinheiro' ? 'bg-green-600' : p.kind === 'Cartão' ? 'bg-amber-500' : p.kind === 'Pix' ? 'bg-cyan-600' : 'bg-gray-400'}`;
-  b.innerHTML = `<span class="text-[10px] font-black uppercase leading-none">${p.label}</span><span class="text-[8px] opacity-80 mt-1">${p.sub}</span>`;
+  b.className = `p-2 h-14 rounded-lg text-white flex flex-col items-center justify-center transition-all ${p.kind === 'Dinheiro' ? 'bg-green-600' : p.kind === 'Cartão' ? 'bg-amber-500' : p.kind === 'Pix' ? 'bg-cyan-600' : 'bg-gray-400'}`;
+  
+  // Lógica para destacar Individual/Dupla e esconder undefined
+  let subHtml = "";
+  if (p.sub) {
+      const isDestaque = p.sub === "Individual" || p.sub === "Dupla";
+      subHtml = `<span class="text-[9px] mt-1 ${isDestaque ? 'font-black bg-black/20 px-2 rounded-full border border-white/30 text-white' : 'opacity-80'}">${p.sub}</span>`;
+  }
+
+  b.innerHTML = `<span class="text-[10px] font-black uppercase leading-none">${p.label}</span>${subHtml}`;
   b.onclick = () => addEntry(p);
   container.appendChild(b);
 });
@@ -153,7 +161,9 @@ function render() {
 }
 
 function addEntry(p) {
-  entries.unshift({ id: Date.now(), time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}), type: p.label + ' ' + p.sub, price: p.price, people: p.people, kind: p.kind });
+  // Evita o nome 'undefined' concatenando apenas se existir sub
+  const fullLabel = p.sub ? `${p.label} ${p.sub}` : p.label;
+  entries.unshift({ id: Date.now(), time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}), type: fullLabel, price: p.price, people: p.people, kind: p.kind });
   localStorage.setItem(`ctj_final_${currentDate}`, JSON.stringify(entries));
   render();
 }
@@ -162,11 +172,9 @@ window.deleteEntry = (id) => {
   if(confirm('Excluir?')) { entries = entries.filter(e => e.id !== id); localStorage.setItem(`ctj_final_${currentDate}`, JSON.stringify(entries)); render(); }
 };
 
-// GERAÇÃO VISUAL (PARA O PAINEL COM GRÁFICO)
 document.getElementById('btnOpenReport').onclick = () => {
   if(entries.length === 0) return alert("Sem dados.");
   document.getElementById('reportPanel').classList.remove('hidden');
-  
   const byKind = {};
   entries.forEach(e => { byKind[e.kind] = (byKind[e.kind] || 0) + e.price; });
   const totals = entries.reduce((a, b) => ({ p: a.p + b.people, v: a.v + b.price }), { p: 0, v: 0 });
@@ -200,7 +208,6 @@ document.getElementById('btnOpenReport').onclick = () => {
   document.getElementById('reportPanel').scrollIntoView({ behavior: 'smooth' });
 };
 
-// DOWNLOAD PDF (APENAS NÚMEROS CONSOLIDADOS - SEM LISTA)
 document.getElementById('downloadPdf').onclick = () => {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
@@ -214,7 +221,6 @@ document.getElementById('downloadPdf').onclick = () => {
 
   doc.setFontSize(14); doc.setFont(undefined, 'bold');
   doc.text("DADOS CONSOLIDADOS", 15, 50);
-  
   doc.setFontSize(11); doc.setFont(undefined, 'normal');
   doc.text(`Publico Total: ${totals.p} pessoas`, 15, 60);
   doc.setFont(undefined, 'bold');
@@ -228,14 +234,13 @@ document.getElementById('downloadPdf').onclick = () => {
     currentY += 10;
   });
 
-  doc.setFontSize(9); doc.setTextColor(150);
-  doc.text(`Documento gerado em: ${new Date().toLocaleString()}`, 105, 280, { align: "center" });
-
   doc.save(`Fechamento_${currentDate}.pdf`);
 };
 
 document.getElementById('resetDay').onclick = () => { if(confirm('Zerar?')) { entries=[]; localStorage.removeItem(`ctj_final_${currentDate}`); render(); } };
 load();
 </script>
+</body>
+</html>
 </body>
 </html>
