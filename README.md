@@ -61,82 +61,127 @@
           <div class="flex gap-4">
             <div class="bg-gray-100 p-3 rounded-lg text-center min-w-[100px]">
               <div class="text-xs text-gray-500 uppercase font-bold mb-1">Pessoas</div>
-      <table class="min-w-full table-fixed text-sm bg-white">
-        <thead class="bg-gray-50">
-          <tr>
-            <th class="p-2 text-left">Hora</th>
-            <th class="p-2 text-left">Tipo</th>
-            <th class="p-2 text-right">Valor</th>
-            <th class="p-2 text-center">Pessoas</th>
-            <th class="p-2 text-center">Ações</th>
-          </tr>
-        </thead>
-        <tbody id="entriesBody" class="divide-y"></tbody>
-      </table>
-    </div>
-  </section>
+              <div id="totalPeople" class="text-2xl font-bold">0</div>
+            </div>
+            
+            <div class="bg-gray-100 p-3 rounded-lg text-center min-w-[140px] relative">
+              <div class="flex items-center justify-center gap-2 mb-1">
+                 <span class="text-xs text-gray-500 uppercase font-bold">Valor Total</span>
+                 <button id="toggleValue" class="text-sm opacity-60 hover:opacity-100 transition-opacity" title="Mostrar/Ocultar valor">
+                    <span id="eyeIcon">👁️</span>
+                 </button>
+              </div>
+              <div id="totalCollected" class="text-2xl font-bold">R$ 0,00</div>
+            </div>
+          </div>
 
-  <section id="reportPanel" class="bg-white p-6 rounded-xl shadow-2xl col-span-3 hidden border-2 border-emerald-100">
-    <div class="flex items-center justify-between mb-6 border-b pb-4">
-      <h2 class="text-xl font-bold text-gray-800">Resumo Profissional do Dia</h2>
-      <div class="flex gap-2">
-        <button id="downloadPdf" class="btn bg-cyan-600 hover:bg-cyan-700 small">💾 Baixar PDF</button>
-        <button id="closeReport" class="btn bg-gray-500 hover:bg-gray-600 small">Fechar</button>
-      </div>
-    </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-      <div class="bg-gray-50 p-4 rounded-lg"><div id="reportSummary" class="space-y-1"></div></div>
-      <div class="bg-gray-50 p-4 rounded-lg"><div id="reportTotals" class="grid grid-cols-2 gap-2"></div></div>
-    </div>
-    <div class="flex justify-center"><div class="w-full max-w-md"><canvas id="reportChart"></canvas></div></div>
-  </section>
+          <div class="flex gap-2">
+            <button id="openReportPanel" class="btn bg-emerald-600 hover:bg-emerald-700 small">Painel de Relatório</button>
+            <button id="toggleTable" class="btn bg-slate-600 hover:bg-slate-700 small">Mostrar/Ocultar Tabela</button>
+          </div>
+        </div>
 
-</main>
+        <div id="tableWrapper" class="mt-4 overflow-x-auto">
+          <table class="min-w-full table-fixed text-sm bg-white">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="p-2">Hora</th>
+                <th class="p-2">Tipo</th>
+                <th class="p-2 text-right">Valor</th>
+                <th class="p-2 text-center">Pessoas</th>
+                <th class="p-2">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="entriesBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="reportPanel" class="bg-white p-4 rounded-xl shadow col-span-3 hidden">
+        <div class="flex items-center justify-between mb-4 gap-4">
+          <h2 class="font-semibold">Relatório Profissional - Resumo do Dia</h2>
+          <div class="flex gap-2">
+            <button id="downloadPdf" class="btn bg-cyan-600 hover:bg-cyan-700 small">Salvar PDF</button>
+            <button id="closeReport" class="btn bg-gray-500 hover:bg-gray-600 small">Fechar</button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div>
+            <div class="text-sm text-gray-600 mb-1">Resumo</div>
+            <div id="reportSummary" class="bg-gray-50 p-3 rounded"></div>
+          </div>
+
+          <div>
+            <div class="text-sm text-gray-600 mb-1">Totais por forma de pagamento</div>
+            <div id="reportTotals" class="bg-gray-50 p-3 rounded"></div>
+          </div>
+        </div>
+
+        <div>
+          <canvas id="reportChart" height="140"></canvas>
+        </div>
+      </section>
+
+    </main>
+  </div>
 
 <script>
-/* TIPOS DE ENTRADA (ATUALIZADO) */
+/* TIPOS */
 const PRICE_TYPES = [
-    { id: "20_dinheiro", label: "Dinheiro - R$20", price: 20, people: 1, kind: "Dinheiro" },
-    { id: "30_dinheiro", label: "Dinheiro - R$30", price: 30, people: 1, kind: "Dinheiro" },
-    { id: "50_dinheiro", label: "Dinheiro - R$50", price: 50, people: 2, kind: "Dinheiro" },
-    { id: "20_credito", label: "Crédito - R$20", price: 20, people: 1, kind: "Crédito" },
-    { id: "30_credito", label: "Crédito - R$30", price: 30, people: 1, kind: "Crédito" },
-    { id: "50_credito", label: "Crédito - R$50", price: 50, people: 2, kind: "Crédito" },
-    { id: "20_debito", label: "Débito - R$20", price: 20, people: 1, kind: "Débito" },
-    { id: "30_debito", label: "Débito - R$30", price: 30, people: 1, kind: "Débito" },
-    { id: "50_debito", label: "Débito - R$50", price: 50, people: 2, kind: "Débito" },
-    { id: "20_pix", label: "Pix - R$20", price: 20, people: 1, kind: "Pix" },
-    { id: "30_pix", label: "Pix - R$30", price: 30, people: 1, kind: "Pix" },
-    { id: "50_pix", label: "Pix - R$50", price: 50, people: 2, kind: "Pix" },
-    { id: "free100", label: "Free 100 Pessoas", price: 0, people: 100, kind: "Gratuidade" },
-    { id: "free", label: "Lista (Free)", price: 0, people: 1, kind: "Gratuidade" },
-    { id: "militar", label: "Militar", price: 0, people: 1, kind: "Gratuidade" },
-    { id: "aniversario", label: "Aniversário", price: 0, people: 1, kind: "Gratuidade" }
+  { id: "20", label: "Dinheiro - R$20", price: 20, people: 1, kind: "Dinheiro" },
+  { id: "30", label: "Dinheiro - R$30", price: 30, people: 1, kind: "Dinheiro" },
+  { id: "50", label: "Dinheiro - R$50", price: 50, people: 2, kind: "Dinheiro" },
+
+  { id: "20_credito", label: "Crédito - R$20", price: 20, people: 1, kind: "Crédito" },
+  { id: "30_credito", label: "Crédito - R$30", price: 30, people: 1, kind: "Crédito" },
+  { id: "50_credito", label: "Crédito - R$50", price: 50, people: 2, kind: "Crédito" },
+
+  { id: "20_debito", label: "Débito - R$20", price: 20, people: 1, kind: "Débito" },
+  { id: "30_debito", label: "Débito - R$30", price: 30, people: 1, kind: "Débito" },
+  { id: "50_debito", label: "Débito - R$50", price: 50, people: 2, kind: "Débito" },
+
+  { id: "20_pix", label: "Pix - R$20", price: 20, people: 1, kind: "Pix" },
+  { id: "30_pix", label: "Pix - R$30", price: 30, people: 1, kind: "Pix" },
+  { id: "50_pix", label: "Pix - R$50", price: 50, people: 2, kind: "Pix" },
+
+  { id: "free50", label: "Free 50 Pessoas", price: 0, people: 1, kind: "Gratuidade" },
+  { id: "free", label: "Lista (Free)", price: 0, people: 1, kind: "Gratuidade" },
+  { id: "militar", label: "Militar", price: 0, people: 1, kind: "Gratuidade" },
+  { id: "aniversario", label: "Aniversário", price: 0, people: 1, kind: "Gratuidade" }
 ];
 
+/* BOTÕES */
 const buttonsContainer = document.getElementById('buttonsContainer');
 PRICE_TYPES.forEach(p => {
-    const b = document.createElement('button');
-    b.className = 'px-2 py-2 rounded-xl text-white text-[10px] md:text-xs font-bold shadow-md transition-all active:scale-95';
-    
-    if (p.kind === "Dinheiro") b.classList.add("bg-green-600", "hover:bg-green-700");
-    else if (p.kind === "Crédito") b.classList.add("bg-amber-500", "hover:bg-amber-600");
-    else if (p.kind === "Débito") b.classList.add("bg-blue-600", "hover:bg-blue-700");
-    else if (p.kind === "Pix") b.classList.add("bg-teal-600", "hover:bg-teal-700");
-    else if (p.id === "free100") b.classList.add("bg-purple-600", "hover:bg-purple-700"); // Destaque para o 100
-    else b.classList.add("bg-gray-400", "hover:bg-gray-500");
+  const b = document.createElement('button');
+  b.className = 'px-3 py-2 rounded-xl text-white text-sm shadow-md transition-all duration-200';
 
-    b.textContent = p.label;
-    b.onclick = () => addEntry(p.id);
-    buttonsContainer.appendChild(b);
+  if (p.kind === "Dinheiro") {
+    b.classList.add("text-xs");
+    b.classList.add("bg-green-600", "hover:bg-green-700");
+  } else if (p.kind === "Crédito") {
+    b.classList.add("bg-yellow-400", "hover:bg-yellow-700", "text-black");
+  } else if (p.kind === "Débito") {
+    b.classList.add("bg-blue-600", "hover:bg-blue-700");
+  } else if (p.kind === "Pix") {
+    b.classList.add("bg-gray-600", "hover:bg-gray-700");
+  } else {
+    b.classList.add("bg-slate-400", "hover:bg-slate-700");
+  }
+
+  b.textContent = p.label;
+  b.onclick = () => addEntry(p.id);
+  buttonsContainer.appendChild(b);
 });
 
-/* LÓGICA CORE */
+/* VARIÁVEIS */
 const todayKey = () => new Date().toISOString().slice(0,10);
 const storageKey = d => `portaria_${d}`;
+
 let currentDate = todayKey();
 let entries = [];
-let isValueVisible = true;
+let isValueVisible = true; // Controle de visibilidade
 
 const currentDateEl = document.getElementById('currentDate');
 const entriesBody = document.getElementById('entriesBody');
@@ -144,470 +189,259 @@ const totalPeopleEl = document.getElementById('totalPeople');
 const totalCollectedEl = document.getElementById('totalCollected');
 const toggleValueBtn = document.getElementById('toggleValue');
 const eyeIcon = document.getElementById('eyeIcon');
+
 const reportPanel = document.getElementById('reportPanel');
 const reportSummary = document.getElementById('reportSummary');
 const reportTotals = document.getElementById('reportTotals');
 const reportChartEl = document.getElementById('reportChart').getContext('2d');
-let reportChart = null;
 
+let reportChart = null;
 currentDateEl.value = currentDate;
 
+/* Lógica do Olho */
 toggleValueBtn.onclick = () => {
     isValueVisible = !isValueVisible;
     eyeIcon.textContent = isValueVisible ? '👁️' : '🙈';
     totalCollectedEl.classList.toggle('hidden-value', !isValueVisible);
-    document.querySelectorAll('.table-price').forEach(el => el.classList.toggle('hidden-value', !isValueVisible));
 };
 
+/* LOAD */
 function loadEntries() {
-    const raw = localStorage.getItem(storageKey(currentDate));
-    entries = raw ? JSON.parse(raw) : [];
-    renderEntries();
+  const raw = localStorage.getItem(storageKey(currentDate));
+  entries = raw ? JSON.parse(raw) : [];
+  renderEntries();
 }
 
 function saveEntries() {
-    localStorage.setItem(storageKey(currentDate), JSON.stringify(entries));
+  localStorage.setItem(storageKey(currentDate), JSON.stringify(entries));
 }
 
+/* RENDER TABELA */
 function renderEntries() {
-    const blurClass = isValueVisible ? '' : 'hidden-value';
-    entriesBody.innerHTML = entries.length ? entries.map(e => `
-        <tr>
-            <td class="p-2">${new Date(e.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</td>
-            <td class="p-2 font-medium">${e.type}</td>
-            <td class="p-2 text-right font-mono table-price ${blurClass}">R$ ${e.price.toFixed(2)}</td>
-            <td class="p-2 text-center">${e.people}</td>
-            <td class="p-2 text-center space-x-1">
-                <button onclick="editEntry(${e.id})" class="text-blue-600 text-xs">Editar</button>
-                <button onclick="deleteEntry(${e.id})" class="text-red-600 text-xs">Excluir</button>
-            </td>
-        </tr>
-    `).join('') : `<tr><td colspan="5" class="p-4 text-center text-gray-400">Sem registros</td></tr>`;
+  entriesBody.innerHTML = entries.length ? entries.map(e => `
+    <tr class="border-t">
+      <td class="p-2">${new Date(e.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</td>
+      <td class="p-2">${e.type}</td>
+      <td class="p-2 text-right">R$ ${e.price.toFixed(2)}</td>
+      <td class="p-2 text-center">${e.people}</td>
+      <td class="p-2 flex gap-2">
+        <button class="px-2 py-1 bg-yellow-500 text-white rounded text-xs" onclick="editEntry(${e.id})">Editar</button>
+        <button class="px-2 py-1 bg-red-500 text-white rounded text-xs" onclick="deleteEntry(${e.id})">Excluir</button>
+      </td>
+    </tr>`).join('') :
+    `<tr><td colspan="5" class="text-center p-4 text-gray-400">Nenhum registro</td></tr>`;
 
-    const totals = entries.reduce((acc, e) => {
-        acc.people += e.people;
-        acc.collected += e.price;
-        return acc;
-    }, { people:0, collected:0 });
+  const totals = entries.reduce((acc, e) => {
+    acc.people += e.people;
+    acc.collected += e.price;
+    return acc;
+  }, { people:0, collected:0 });
 
-    totalPeopleEl.textContent = totals.people;
-    totalCollectedEl.textContent = `R$ ${totals.collected.toFixed(2)}`;
+  totalPeopleEl.textContent = totals.people;
+  totalCollectedEl.textContent = `R$ ${totals.collected.toFixed(2)}`;
 }
 
+/* ADD ENTRY */
 function addEntry(id) {
-    const t = PRICE_TYPES.find(p => p.id === id);
-    if (!t) return;
-    entries.unshift({ id: Date.now(), timestamp: new Date().toISOString(), type: t.label, price: t.price, people: t.people, kind: t.kind });
-    saveEntries();
-    renderEntries();
+  const t = PRICE_TYPES.find(p => p.id === id);
+  if (!t) return;
+
+  entries.unshift({
+    id: Date.now(),
+    timestamp: new Date().toISOString(),
+    type: t.label,
+    price: t.price,
+    people: t.people,
+    kind: t.kind
+  });
+
+  saveEntries();
+  renderEntries();
 }
 
+/* DELETE */
 function deleteEntry(id) {
-    if (!confirm('Excluir registro?')) return;
-    entries = entries.filter(x => x.id !== id);
-    saveEntries();
-    renderEntries();
+  if (!confirm('Deseja excluir este registro?')) return;
+  entries = entries.filter(x => x.id !== id);
+  saveEntries();
+  renderEntries();
 }
 
+/* EDIT */
 function editEntry(id) {
-    const item = entries.find(x => x.id === id);
-    if (!item) return;
-    const newPrice = prompt('Preço:', item.price);
-    const newPeople = prompt('Pessoas:', item.people);
-    if (newPrice !== null && newPeople !== null) {
-        item.price = Number(newPrice);
-        item.people = Number(newPeople);
-        saveEntries();
-        renderEntries();
-    }
+  const item = entries.find(x => x.id === id);
+  if (!item) return;
+
+  const newPrice = prompt('Editar preço (somente números):', item.price);
+  if (newPrice === null) return;
+
+  const newPeople = prompt('Editar número de pessoas:', item.people);
+  if (newPeople === null) return;
+
+  item.price = Number(newPrice) || 0;
+  item.people = Number(newPeople) || 0;
+
+  saveEntries();
+  renderEntries();
 }
 
-/* CSV E RELATÓRIO */
+/* CSV */
 document.getElementById('exportCSV').addEventListener('click', () => {
-    const headers = ['Data','Tipo','Valor','Pessoas'];
-    const rows = entries.map(e => [`"${new Date(e.timestamp).toLocaleString()}"`, `"${e.type}"`, e.price, e.people]);
-    const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
-    const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `portaria_${currentDate}.csv`; a.click();
+  const headers = ['timestamp','type','price','people'];
+  const rows = entries.map(e => [e.timestamp, e.type, e.price, e.people]);
+  const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `portaria_${currentDate}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
 });
 
-document.getElementById('generateReport').addEventListener('click', () => {
-    reportPanel.classList.remove('hidden');
-    generateReportVisual();
-    reportPanel.scrollIntoView({ behavior: 'smooth' });
+/* RESET */
+document.getElementById('resetDay').addEventListener('click', () => {
+  if (!confirm('Deseja realmente limpar todos os registros do dia?')) return;
+  entries = [];
+  saveEntries();
+  renderEntries();
 });
 
-document.getElementById('closeReport').addEventListener('click', () => reportPanel.classList.add('hidden'));
+document.getElementById('saveDay').addEventListener('click', () => saveEntries());
 
+/* RELATÓRIO */
+document.getElementById('openReportPanel').addEventListener('click', () => {
+  reportPanel.classList.remove('hidden');
+  generateReportVisual();
+});
+
+document.getElementById('closeReport').addEventListener('click', () => {
+  reportPanel.classList.add('hidden');
+});
+
+/* TABELA */
+document.getElementById('toggleTable').addEventListener('click', () => {
+  const w = document.getElementById('tableWrapper');
+  w.style.display = (w.style.display === 'none') ? 'block' : 'none';
+});
+
+/* GERAR RESUMO + GRÁFICO COM VALORES */
 function generateReportVisual() {
-    const totals = entries.reduce((a,e) => { a.people += e.people; a.collected += e.price; return a; }, { people:0, collected:0 });
-    const byKind = {};
-    entries.forEach(e => {
-        byKind[e.kind] = byKind[e.kind] || { count:0, collected:0 };
-        byKind[e.kind].count += e.people;
-        byKind[e.kind].collected += e.price;
-    });
+  const totals = entries.reduce((a,e) => {
+    a.people += e.people;
+    a.collected += e.price;
+    return a;
+  }, { people:0, collected:0 });
 
-    reportSummary.innerHTML = `
-        <p><strong>📅 Data:</strong> ${currentDate}</p>
-        <p><strong>💰 Valor Total:</strong> R$ ${totals.collected.toFixed(2)}</p>
-        <p><strong>👥 Total Pessoas:</strong> ${totals.people}</p>
-    `;
+  const byKind = {};
+  entries.forEach(e => {
+    byKind[e.kind] = byKind[e.kind] || { count:0, collected:0 };
+    byKind[e.kind].count += e.people;
+    byKind[e.kind].collected += e.price;
+  });
 
-    let totalsHtml = '';
-    Object.keys(byKind).forEach(k => {
-        totalsHtml += `<div class="bg-white p-2 rounded shadow-sm border-l-4 border-emerald-500 text-xs font-bold">${k}: R$ ${byKind[k].collected.toFixed(2)} (${byKind[k].count}p)</div>`;
-    });
-    reportTotals.innerHTML = totalsHtml || 'Sem dados';
+  const first = entries.length ? new Date(entries[entries.length-1].timestamp).toLocaleTimeString() : '-';
+  const last = entries.length ? new Date(entries[0].timestamp).toLocaleTimeString() : '-';
+  const avg = totals.people ? (totals.collected / totals.people) : 0;
 
-    if (reportChart) reportChart.destroy();
-    reportChart = new Chart(reportChartEl, {
-        type: 'doughnut',
-        data: { labels: Object.keys(byKind), datasets: [{ data: Object.values(byKind).map(v => v.collected), backgroundColor: ['#10B981','#06B6D4','#F59E0B','#6366F1','#F43F5E'] }] },
-        plugins: [ChartDataLabels],
-        options: { plugins: { datalabels: { color: '#fff', formatter: (v) => `R$${v.toFixed(0)}` } } }
-    });
-}
-
-document.getElementById('downloadPdf').addEventListener('click', async () => {
-    const panel = document.getElementById('reportPanel');
-    document.getElementById('downloadPdf').style.display = 'none';
-    document.getElementById('closeReport').style.display = 'none';
-    const canvas = await html2canvas(panel, { scale: 2 });
-    const imgData = canvas.toDataURL('image/png');
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    pdf.addImage(imgData, 'PNG', 10, 15, 190, (canvas.height * 190) / canvas.width);
-    pdf.save(`relatorio_${currentDate}.pdf`);
-    document.getElementById('downloadPdf').style.display = '';
-    document.getElementById('closeReport').style.display = '';
-});
-
-currentDateEl.onchange = e => { currentDate = e.target.value; loadEntries(); };
-loadEntries();
-</script>
-</body>
-</html>      <table class="min-w-full table-fixed text-sm bg-white">
-        <thead class="bg-gray-50">
-          <tr>
-            <th class="p-2 text-left">Hora</th>
-            <th class="p-2 text-left">Tipo</th>
-            <th class="p-2 text-right">Valor</th>
-            <th class="p-2 text-center">Pessoas</th>
-            <th class="p-2 text-center">Ações</th>
-          </tr>
-        </thead>
-        <tbody id="entriesBody" class="divide-y"></tbody>
-      </table>
+  reportSummary.innerHTML = `
+    <div class="text-sm">
+      <p><strong>Data:</strong> ${currentDate}</p>
+      <p><strong>Valor Total:</strong> R$ ${totals.collected.toFixed(2)}</p>
+      <p><strong>Total de pessoas:</strong> ${totals.people}</p>
+      <p><strong>Primeira entrada:</strong> ${first}</p>
+      <p><strong>Última entrada:</strong> ${last}</p>
+      <p><strong>Média por pessoa:</strong> R$ ${avg.toFixed(2)}</p>
     </div>
-  </section>
+  `;
 
-  <section id="reportPanel" class="bg-white p-6 rounded-xl shadow-2xl col-span-3 hidden border-2 border-emerald-100">
-    <div class="flex items-center justify-between mb-6 border-b pb-4">
-      <h2 class="text-xl font-bold text-gray-800">Resumo Profissional do Dia</h2>
-      <div class="flex gap-2">
-        <button id="downloadPdf" class="btn bg-cyan-600 hover:bg-cyan-700 small">💾 Baixar PDF</button>
-        <button id="closeReport" class="btn bg-gray-500 hover:bg-gray-600 small">Fechar</button>
-      </div>
-    </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-      <div class="bg-gray-50 p-4 rounded-lg"><div id="reportSummary" class="space-y-1"></div></div>
-      <div class="bg-gray-50 p-4 rounded-lg"><div id="reportTotals" class="grid grid-cols-2 gap-2"></div></div>
-    </div>
-    <div class="flex justify-center"><div class="w-full max-w-md"><canvas id="reportChart"></canvas></div></div>
-  </section>
+  let totalsHtml = '<div class="grid grid-cols-1 gap-2">';
+  Object.keys(byKind).forEach(k => {
+    totalsHtml += `<div class="flex justify-between">
+      <div class="text-sm">${k}</div>
+      <div class="font-semibold">R$ ${byKind[k].collected.toFixed(2)} / ${byKind[k].count}p</div>
+    </div>`;
+  });
+  totalsHtml += '</div>';
+  reportTotals.innerHTML = totalsHtml || '<div class="text-sm text-gray-500">Sem registros</div>';
 
-</main>
+  const labels = Object.keys(byKind);
+  const data = labels.map(l => byKind[l].collected);
 
-<script>
-/* TIPOS DE ENTRADA (ATUALIZADO) */
-const PRICE_TYPES = [
-    { id: "20_dinheiro", label: "Dinheiro - R$20", price: 20, people: 1, kind: "Dinheiro" },
-    { id: "30_dinheiro", label: "Dinheiro - R$30", price: 30, people: 1, kind: "Dinheiro" },
-    { id: "50_dinheiro", label: "Dinheiro - R$50", price: 50, people: 2, kind: "Dinheiro" },
-    { id: "20_credito", label: "Crédito - R$20", price: 20, people: 1, kind: "Crédito" },
-    { id: "30_credito", label: "Crédito - R$30", price: 30, people: 1, kind: "Crédito" },
-    { id: "50_credito", label: "Crédito - R$50", price: 50, people: 2, kind: "Crédito" },
-    { id: "20_debito", label: "Débito - R$20", price: 20, people: 1, kind: "Débito" },
-    { id: "30_debito", label: "Débito - R$30", price: 30, people: 1, kind: "Débito" },
-    { id: "50_debito", label: "Débito - R$50", price: 50, people: 2, kind: "Débito" },
-    { id: "20_pix", label: "Pix - R$20", price: 20, people: 1, kind: "Pix" },
-    { id: "30_pix", label: "Pix - R$30", price: 30, people: 1, kind: "Pix" },
-    { id: "50_pix", label: "Pix - R$50", price: 50, people: 2, kind: "Pix" },
-    { id: "free100", label: "Free 100 Pessoas", price: 0, people: 100, kind: "Gratuidade" },
-    { id: "free", label: "Lista (Free)", price: 0, people: 1, kind: "Gratuidade" },
-    { id: "militar", label: "Militar", price: 0, people: 1, kind: "Gratuidade" },
-    { id: "aniversario", label: "Aniversário", price: 0, people: 1, kind: "Gratuidade" }
-];
+  if (reportChart) { reportChart.destroy(); reportChart = null; }
 
-const buttonsContainer = document.getElementById('buttonsContainer');
-PRICE_TYPES.forEach(p => {
-    const b = document.createElement('button');
-    b.className = 'px-2 py-2 rounded-xl text-white text-[10px] md:text-xs font-bold shadow-md transition-all active:scale-95';
-    
-    if (p.kind === "Dinheiro") b.classList.add("bg-green-600", "hover:bg-green-700");
-    else if (p.kind === "Crédito") b.classList.add("bg-amber-500", "hover:bg-amber-600");
-    else if (p.kind === "Débito") b.classList.add("bg-blue-600", "hover:bg-blue-700");
-    else if (p.kind === "Pix") b.classList.add("bg-teal-600", "hover:bg-teal-700");
-    else if (p.id === "free100") b.classList.add("bg-purple-600", "hover:bg-purple-700"); // Destaque para o 100
-    else b.classList.add("bg-gray-400", "hover:bg-gray-500");
-
-    b.textContent = p.label;
-    b.onclick = () => addEntry(p.id);
-    buttonsContainer.appendChild(b);
-});
-
-/* LÓGICA CORE */
-const todayKey = () => new Date().toISOString().slice(0,10);
-const storageKey = d => `portaria_${d}`;
-let currentDate = todayKey();
-let entries = [];
-let isValueVisible = true;
-
-const currentDateEl = document.getElementById('currentDate');
-const entriesBody = document.getElementById('entriesBody');
-const totalPeopleEl = document.getElementById('totalPeople');
-const totalCollectedEl = document.getElementById('totalCollected');
-const toggleValueBtn = document.getElementById('toggleValue');
-const eyeIcon = document.getElementById('eyeIcon');
-const reportPanel = document.getElementById('reportPanel');
-const reportSummary = document.getElementById('reportSummary');
-const reportTotals = document.getElementById('reportTotals');
-const reportChartEl = document.getElementById('reportChart').getContext('2d');
-let reportChart = null;
-
-currentDateEl.value = currentDate;
-
-toggleValueBtn.onclick = () => {
-    isValueVisible = !isValueVisible;
-    eyeIcon.textContent = isValueVisible ? '👁️' : '🙈';
-    totalCollectedEl.classList.toggle('hidden-value', !isValueVisible);
-    document.querySelectorAll('.table-price').forEach(el => el.classList.toggle('hidden-value', !isValueVisible));
-};
-
-function loadEntries() {
-    const raw = localStorage.getItem(storageKey(currentDate));
-    entries = raw ? JSON.parse(raw) : [];
-    renderEntries();
-}
-
-function saveEntries() {
-    localStorage.setItem(storageKey(currentDate), JSON.stringify(entries));
-}
-
-function renderEntries() {
-    const blurClass = isValueVisible ? '' : 'hidden-value';
-    entriesBody.innerHTML = entries.length ? entries.map(e => `
-        <tr>
-            <td class="p-2">${new Date(e.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</td>
-            <td class="p-2 font-medium">${e.type}</td>
-            <td class="p-2 text-right font-mono table-price ${blurClass}">R$ ${e.price.toFixed(2)}</td>
-            <td class="p-2 text-center">${e.people}</td>
-            <td class="p-2 text-center space-x-1">
-                <button onclick="editEntry(${e.id})" class="text-blue-600 text-xs">Editar</button>
-                <button onclick="deleteEntry(${e.id})" class="text-red-600 text-xs">Excluir</button>
-            </td>
-        </tr>
-    `).join('') : `<tr><td colspan="5" class="p-4 text-center text-gray-400">Sem registros</td></tr>`;
-
-    const totals = entries.reduce((acc, e) => {
-        acc.people += e.people;
-        acc.collected += e.price;
-        return acc;
-    }, { people:0, collected:0 });
-
-    totalPeopleEl.textContent = totals.people;
-    totalCollectedEl.textContent = `R$ ${totals.collected.toFixed(2)}`;
-}
-
-function addEntry(id) {
-    const t = PRICE_TYPES.find(p => p.id === id);
-    if (!t) return;
-    entries.unshift({ id: Date.now(), timestamp: new Date().toISOString(), type: t.label, price: t.price, people: t.people, kind: t.kind });
-    saveEntries();
-    renderEntries();
-}
-
-function deleteEntry(id) {
-    if (!confirm('Excluir registro?')) return;
-    entries = entries.filter(x => x.id !== id);
-    saveEntries();
-    renderEntries();
-}
-
-function editEntry(id) {
-    const item = entries.find(x => x.id === id);
-    if (!item) return;
-    const newPrice = prompt('Preço:', item.price);
-    const newPeople = prompt('Pessoas:', item.people);
-    if (newPrice !== null && newPeople !== null) {
-        item.price = Number(newPrice);
-        item.people = Number(newPeople);
-        saveEntries();
-        renderEntries();
-    }
-}
-
-/* CSV E RELATÓRIO */
-document.getElementById('exportCSV').addEventListener('click', () => {
-    const headers = ['Data','Tipo','Valor','Pessoas'];
-    const rows = entries.map(e => [`"${new Date(e.timestamp).toLocaleString()}"`, `"${e.type}"`, e.price, e.people]);
-    const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
-    const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `portaria_${currentDate}.csv`; a.click();
-});
-
-document.getElementById('generateReport').addEventListener('click', () => {
-    reportPanel.classList.remove('hidden');
-    generateReportVisual();
-    reportPanel.scrollIntoView({ behavior: 'smooth' });
-});
-
-document.getElementById('closeReport').addEventListener('click', () => reportPanel.classList.add('hidden'));
-
-function generateReportVisual() {
-    const totals = entries.reduce((a,e) => { a.people += e.people; a.collected += e.price; return a; }, { people:0, collected:0 });
-    const byKind = {};
-    entries.forEach(e => {
-        byKind[e.kind] = byKind[e.kind] || { count:0, collected:0 };
-        byKind[e.kind].count += e.people;
-        byKind[e.kind].collected += e.price;
-    });
-
-    reportSummary.innerHTML = `
-        <p><strong>📅 Data:</strong> ${currentDate}</p>
-        <p><strong>💰 Valor Total:</strong> R$ ${totals.collected.toFixed(2)}</p>
-        <p><strong>👥 Total Pessoas:</strong> ${totals.people}</p>
-    `;
-
-    let totalsHtml = '';
-    Object.keys(byKind).forEach(k => {
-        totalsHtml += `<div class="bg-white p-2 rounded shadow-sm border-l-4 border-emerald-500 text-xs font-bold">${k}: R$ ${byKind[k].collected.toFixed(2)} (${byKind[k].count}p)</div>`;
-    });
-    reportTotals.innerHTML = totalsHtml || 'Sem dados';
-
-    if (reportChart) reportChart.destroy();
-    reportChart = new Chart(reportChartEl, {
-        type: 'doughnut',
-        data: { labels: Object.keys(byKind), datasets: [{ data: Object.values(byKind).map(v => v.collected), backgroundColor: ['#10B981','#06B6D4','#F59E0B','#6366F1','#F43F5E'] }] },
-        plugins: [ChartDataLabels],
-        options: { plugins: { datalabels: { color: '#fff', formatter: (v) => `R$${v.toFixed(0)}` } } }
-    });
-}
-
-document.getElementById('downloadPdf').addEventListener('click', async () => {
-    const panel = document.getElementById('reportPanel');
-    document.getElementById('downloadPdf').style.display = 'none';
-    document.getElementById('closeReport').style.display = 'none';
-    const canvas = await html2canvas(panel, { scale: 2 });
-    const imgData = canvas.toDataURL('image/png');
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    pdf.addImage(imgData, 'PNG', 10, 15, 190, (canvas.height * 190) / canvas.width);
-    pdf.save(`relatorio_${currentDate}.pdf`);
-    document.getElementById('downloadPdf').style.display = '';
-    document.getElementById('closeReport').style.display = '';
-});
-
-currentDateEl.onchange = e => { currentDate = e.target.value; loadEntries(); };
-loadEntries();
-</script>
-</body>
-</html>    const totalPeopleEl = document.getElementById('totalPeople');
-    const totalCollectedEl = document.getElementById('totalCollected');
-    const buttonsContainer = document.getElementById('buttonsContainer');
-
-    let currentDate = todayKey();
-    let entries = [];
-    currentDateEl.value = currentDate;
-
-    function loadEntries() {
-      const raw = localStorage.getItem(storageKey(currentDate));
-      entries = raw ? JSON.parse(raw) : [];
-      renderEntries();
-    }
-
-    function saveEntries() {
-      localStorage.setItem(storageKey(currentDate), JSON.stringify(entries));
-    }
-
-    function renderEntries() {
-      entriesBody.innerHTML = entries.map(e => `
-        <tr class="border-t">
-          <td class="py-2">${new Date(e.timestamp).toLocaleTimeString()}</td>
-          <td class="py-2">${e.type}</td>
-          <td class="py-2">R$ ${e.price.toFixed(2)}</td>
-          <td class="py-2">${e.people}</td>
-          <td class="py-2">${e.note || ''}</td>
-        </tr>`).join('') || '<tr><td colspan="5" class="text-gray-400 py-4 text-center">Nenhum registro</td></tr>';
-
-      const totals = entries.reduce((a, e) => {
-        a.people += e.people;
-        a.collected += e.price;
-        return a;
-      }, { people: 0, collected: 0 });
-
-      totalPeopleEl.textContent = totals.people;
-      totalCollectedEl.textContent = `R$ ${totals.collected.toFixed(2)}`;
-    }
-
-    function addEntry(id) {
-      const t = PRICE_TYPES.find(p => p.id === id);
-      if (!t) return;
-      entries.unshift({
-        id: Date.now(),
-        timestamp: new Date().toISOString(),
-        type: t.label,
-        price: t.price,
-        people: t.people,
-        note: noteEl.value.trim(),
-      });
-      noteEl.value = '';
-      saveEntries();
-      renderEntries();
-    }
-
-    PRICE_TYPES.forEach(p => {
-      const btn = document.createElement('button');
-      btn.className = `flex flex-col items-center justify-center gap-1 p-3 rounded-xl border hover:scale-105 transition-transform ${p.color} text-center text-xs sm:text-sm font-semibold shadow-sm`;
-      btn.innerHTML = `<span>${p.label}</span>`;
-      btn.onclick = () => addEntry(p.id);
-      buttonsContainer.appendChild(btn);
-    });
-
-    document.getElementById('resetDay').onclick = () => {
-      if (confirm('Tem certeza que deseja limpar todos os registros do dia?')) {
-        entries = [];
-        saveEntries();
-        renderEntries();
+  reportChart = new Chart(reportChartEl, {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{ data, backgroundColor: ['#10B981','#06B6D4','#F59E0B','#6366F1','#F43F5E'] }]
+    },
+    plugins: [ChartDataLabels],
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'right' },
+        datalabels: {
+          color: '#ffffff',
+          font: { weight: 'bold', size: 14 },
+          formatter: (value) => `R$ ${value.toFixed(2)}`
+        }
       }
-    };
+    }
+  });
+}
 
-    document.getElementById('exportCSV').onclick = () => {
-      const headers = ['timestamp','type','price','people','note'];
-      const rows = entries.map(e => [e.timestamp, e.type, e.price, e.people, e.note || '']);
-      const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `portaria_${currentDate}.csv`;
-      a.click();
-      URL.revokeObjectURL(url);
-    };
+/* PDF */
+document.getElementById('downloadPdf').addEventListener('click', async () => {
+  const panel = document.querySelector('#reportPanel');
+  const closeBtn = document.getElementById('closeReport');
+  const downloadBtn = document.getElementById('downloadPdf');
 
-    document.getElementById('saveDay').onclick = () => saveEntries();
+  closeBtn.style.display = 'none';
+  downloadBtn.style.display = 'none';
 
-    currentDateEl.onchange = e => {
-      currentDate = e.target.value;
-      loadEntries();
-    };
+  await new Promise(r => setTimeout(r, 200));
 
-    loadEntries();
-  </script>
+  const canvas = await html2canvas(panel, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+  const imgData = canvas.toDataURL('image/png');
+
+  closeBtn.style.display = '';
+  downloadBtn.style.display = '';
+
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const margin = 20;
+  const imgProps = pdf.getImageProperties(imgData);
+  const imgWidth = pageWidth - margin*2;
+  const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+
+  pdf.addImage(imgData, 'PNG', margin, margin, imgWidth, imgHeight);
+  pdf.setFontSize(10);
+  pdf.text(`Relatório gerado: ${new Date().toLocaleString()}`, margin, pdf.internal.pageSize.getHeight() - 10);
+
+  pdf.save(`relatorio_portaria_${currentDate}.pdf`);
+});
+
+/* DATA CHANGE */
+currentDateEl.onchange = e => {
+  currentDate = e.target.value;
+  loadEntries();
+};
+
+function init() {
+  currentDateEl.value = currentDate;
+  loadEntries();
+  renderEntries();
+}
+init();
+
+window.deleteEntry = deleteEntry;
+window.editEntry = editEntry;
+window.addEntry = addEntry;
+</script>
+
 </body>
 </html>
