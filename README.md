@@ -116,6 +116,8 @@ let isValueVisible = true;
 let chartInstance = null;
 let currentDate = new Date().toISOString().slice(0,10);
 
+function toggleBlur() { isValueVisible = !isValueVisible; document.getElementById('eyeIcon').textContent = isValueVisible ? '👁️' : '🙈'; render(); }
+
 function renderButtons() {
   const container = document.getElementById('buttonsContainer');
   container.innerHTML = '';
@@ -125,13 +127,11 @@ function renderButtons() {
     const b = document.createElement('button');
     let sub = p.sub;
     let disabled = false;
-
     if (p.isCounter) {
         const rest = p.limit - count100;
         sub = rest > 0 ? `Restam ${rest}` : "ESGOTADO";
         if (rest <= 0) disabled = true;
     }
-
     b.className = `p-2 h-14 rounded-lg text-white flex flex-col items-center justify-center transition-all ${disabled ? 'btn-disabled' : (p.kind === 'Dinheiro' ? 'bg-green-600' : p.kind === 'Cartão' ? 'bg-amber-500' : p.kind === 'Pix' ? 'bg-cyan-600' : 'bg-gray-400')}`;
     let subHtml = p.sub || p.isCounter ? `<span class="text-[9px] mt-1 font-black bg-black/20 px-2 rounded-full border border-white/10">${sub}</span>` : "";
     b.innerHTML = `<span class="text-[10px] font-black uppercase leading-none">${p.label}</span>${subHtml}`;
@@ -158,7 +158,6 @@ function render() {
       <td class="p-3 text-center"><button onclick="deleteEntry(${e.id})" class="text-red-200 hover:text-red-500">✕</button></td>
     </tr>
   `).join('');
-
   const totals = entries.reduce((a, b) => ({ p: a.p + b.people, v: a.v + b.price }), { p: 0, v: 0 });
   document.getElementById('totalPeople').textContent = totals.p;
   document.getElementById('totalCollected').textContent = `R$ ${totals.v.toFixed(2)}`;
@@ -178,7 +177,6 @@ window.deleteEntry = (id) => {
 document.getElementById('btnOpenReport').onclick = () => {
   if(entries.length === 0) return alert("Sem dados.");
   document.getElementById('reportPanel').classList.remove('hidden');
-  
   const totals = entries.reduce((a, b) => ({ p: a.p + b.people, v: a.v + b.price }), { p: 0, v: 0 });
   const stats = {};
   entries.forEach(e => {
@@ -186,7 +184,6 @@ document.getElementById('btnOpenReport').onclick = () => {
     stats[e.kind].money += e.price;
     stats[e.kind].people += e.people;
   });
-
   const times = entries.map(e => e.timestamp).sort();
   const first = new Date(times[0]).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
   const last = new Date(times[times.length-1]).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
@@ -201,10 +198,7 @@ document.getElementById('btnOpenReport').onclick = () => {
 
   document.getElementById('reportTotals').innerHTML = Object.entries(stats).map(([k, v]) => `
     <div class="flex justify-between items-center border-b py-2">
-      <div>
-        <div class="text-[10px] font-black uppercase text-gray-700">${k}</div>
-        <div class="text-[9px] text-gray-400 font-bold">${v.people} pessoas</div>
-      </div>
+      <div><div class="text-[10px] font-black uppercase text-gray-700">${k}</div><div class="text-[9px] text-gray-400 font-bold">${v.people} pessoas</div></div>
       <div class="font-black text-gray-600 text-xs">R$ ${v.money.toFixed(2)}</div>
     </div>
   `).join('');
@@ -214,7 +208,12 @@ document.getElementById('btnOpenReport').onclick = () => {
     type: 'doughnut',
     data: { labels: Object.keys(stats), datasets: [{ data: Object.values(stats).map(v => v.money), backgroundColor: ['#10b981', '#f59e0b', '#06b6d4', '#cbd5e1'] }] },
     plugins: [ChartDataLabels],
-    options: { responsive: true, animation: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 9 } } }, datalabels: { color: '#000', font: { weight: 'bold', size: 9 }, formatter: v => v > 0 ? `R$${v.toFixed(0)}` : '' } } }
+    options: { 
+      responsive: true, 
+      maintainAspectRatio: false,
+      animation: false, 
+      plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 9 } } }, datalabels: { color: '#000', font: { weight: 'bold', size: 9 }, formatter: v => v > 0 ? `R$${v.toFixed(0)}` : '' } } 
+    }
   });
   document.getElementById('reportPanel').scrollIntoView({ behavior: 'smooth' });
 };
@@ -251,6 +250,14 @@ document.getElementById('downloadPdf').onclick = () => {
     doc.text(`Subtotal: R$ ${v.money.toFixed(2)}`, 110, currentY);
     currentY += 10;
   });
+
+  // --- ADICIONANDO O GRÁFICO AO PDF ---
+  const canvas = document.getElementById('reportChart');
+  if (canvas) {
+    const imgData = canvas.toDataURL('image/png', 1.0);
+    // Adiciona a imagem centralizada (x=55, y=posicao_atual+10, largura=100, altura=100)
+    doc.addImage(imgData, 'PNG', 55, currentY + 10, 100, 100);
+  }
 
   doc.save(`Fechamento_${currentDate}.pdf`);
 };
