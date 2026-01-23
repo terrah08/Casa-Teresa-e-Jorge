@@ -129,23 +129,20 @@
 <script>
 /* TIPOS */
 const PRICE_TYPES = [
-  { id: "20", label: "Dinheiro - R$20", price: 20, people: 1, kind: "Dinheiro" },
-  { id: "30", label: "Dinheiro - R$30", price: 30, people: 1, kind: "Dinheiro" },
-  { id: "50", label: "Dinheiro - R$50", price: 50, people: 2, kind: "Dinheiro" },
+  { id: "20", label: "Dinheiro - R$20 Individual", price: 20, people: 1, kind: "Dinheiro" },
+  { id: "30", label: "Dinheiro -  R$30 Individual", price: 30, people: 1, kind: "Dinheiro" },
+  { id: "50", label: "Dinheiro - R$50 Dupla", price: 50, people: 2, kind: "Dinheiro" },
 
-  { id: "20_credito", label: "Crédito - R$20", price: 20, people: 1, kind: "Crédito" },
-  { id: "30_credito", label: "Crédito - R$30", price: 30, people: 1, kind: "Crédito" },
-  { id: "50_credito", label: "Crédito - R$50", price: 50, people: 2, kind: "Crédito" },
+  { id: "20_cartao", label: "Cartão - R$20 Individual", price: 20, people: 1, kind: "Crédito" },
+  { id: "30_cartao", label: "Cartão - R$30 Individual", price: 30, people: 1, kind: "Crédito" },
+  { id: "30_cartao", label: "Cartão - R$30 Dupla", price: 30, people: 2, kind: "Crédito" },
+  { id: "50_cartao", label: "Cartão- R$50 Dupla", price: 50, people: 2, kind: "Crédito" },
 
-  { id: "20_debito", label: "Débito - R$20", price: 20, people: 1, kind: "Débito" },
-  { id: "30_debito", label: "Débito - R$30", price: 30, people: 1, kind: "Débito" },
-  { id: "50_debito", label: "Débito - R$50", price: 50, people: 2, kind: "Débito" },
+  { id: "30_pix", label: "Pix - R$30 Individual", price: 20, people: 1, kind: "Pix" },
+  { id: "30_pix", label: "Pix - R$30 Dupla", price: 30, people: 2, kind: "Pix" },
+  { id: "50_pix", label: "Pix - R$50 Dupla", price: 50, people: 2, kind: "Pix" },
 
-  { id: "20_pix", label: "Pix - R$20", price: 20, people: 1, kind: "Pix" },
-  { id: "30_pix", label: "Pix - R$30", price: 30, people: 1, kind: "Pix" },
-  { id: "50_pix", label: "Pix - R$50", price: 50, people: 2, kind: "Pix" },
-
-  { id: "free50", label: "Free 50 Pessoas", price: 0, people: 1, kind: "Gratuidade" },
+  { id: "free100", label: "Free 100 Pessoas", price: 0, people: 1, kind: "Gratuidade" },
   { id: "free", label: "Lista (Free)", price: 0, people: 1, kind: "Gratuidade" },
   { id: "militar", label: "Militar", price: 0, people: 1, kind: "Gratuidade" },
   { id: "aniversario", label: "Aniversário", price: 0, people: 1, kind: "Gratuidade" }
