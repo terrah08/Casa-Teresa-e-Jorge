@@ -102,7 +102,7 @@ const PRICE_TYPES = [
   { id: "20_pix", label: "Pix R$20", sub: "Individual", price: 20, people: 1, kind: "Pix" },
   { id: "30_pix", label: "Pix R$30", sub: "Individual", price: 30, people: 1, kind: "Pix" },
   { id: "50_pix", label: "Pix R$50", sub: "Dupla", price: 50, people: 2, kind: "Pix" },
-  { id: "f100", label: "100 Pessoas", sub: "", price: 0, people: 100, kind: "Gratuidade" },
+  { id: "f100", label: "100 Pessoas", sub: "", price: 0, people: 1, kind: "Gratuidade" },
   { id: "list", label: "Lista", sub: "", price: 0, people: 1, kind: "Gratuidade" },
   { id: "Aniv", label: "Aniversário", sub: "", price: 0, people: 1, kind: "Gratuidade" },
   { id: "milt", label: "Militar", sub: "", price: 0, people: 1, kind: "Gratuidade" }
