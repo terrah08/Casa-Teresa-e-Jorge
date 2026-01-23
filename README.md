@@ -11,7 +11,7 @@
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
 <style>
-  .btn { @apply px-3 py-2 rounded-xl text-white shadow-md transition-all duration-200 active:scale-95 flex flex-col items-center justify-center gap-1; }
+  .btn { @apply px-3 py-2 rounded-xl text-white shadow-md transition-all duration-200 active:scale-95 flex items-center justify-center gap-2; }
   .hidden-value { filter: blur(6px); pointer-events: none; user-select: none; }
   #chartWrapper { width: 100%; max-width: 280px; margin: 0 auto; }
 </style>
@@ -102,9 +102,9 @@ const PRICE_TYPES = [
   { id: "30_pix", label: "Pix R$30", sub: "Individual", price: 30, people: 1, kind: "Pix" },
   { id: "50_pix", label: "Pix R$50", sub: "Dupla", price: 50, people: 2, kind: "Pix" },
   { id: "f100", label: "100 Pessoas", sub: "FREE", price: 0, people: 100, kind: "Gratuidade" },
-  { id: "list", label: "Lista", price: 0, people: 1, kind: "Gratuidade" },
-  { id: "Aniv", label: "Aniversário", price: 0, people: 1, kind: "Gratuidade" },
-  { id: "milt", label: "Militar", price: 0, people: 1, kind: "Gratuidade" }
+  { id: "list", label: "Lista", sub: "Indiv.", price: 0, people: 1, kind: "Gratuidade" },
+  { id: "Aniv", label: "Aniversário", sub: "Isento", price: 0, people: 1, kind: "Gratuidade" },
+  { id: "milt", label: "Militar", sub: "Isento", price: 0, people: 1, kind: "Gratuidade" }
 ];
 
 let entries = [];
@@ -114,13 +114,9 @@ let currentDate = new Date().toISOString().slice(0,10);
 
 const container = document.getElementById('buttonsContainer');
 PRICE_TYPES.forEach(p => {
-  const isSpecial = p.sub === "Individual" || p.sub === "Dupla";
   const b = document.createElement('button');
-  b.className = `btn h-14 ${p.kind === 'Dinheiro' ? 'bg-green-600' : p.kind === 'Cartão' ? 'bg-amber-500' : p.kind === 'Pix' ? 'bg-cyan-600' : 'bg-gray-400'}`;
-  b.innerHTML = `
-    <span class="text-[10px] font-black uppercase leading-none">${p.label}</span>
-    <span class="text-[9px] ${isSpecial ? 'font-black underline underline-offset-2' : 'opacity-80'}">${p.sub}</span>
-  `;
+  b.className = `p-2 h-14 rounded-lg text-white flex flex-col items-center justify-center ${p.kind === 'Dinheiro' ? 'bg-green-600' : p.kind === 'Cartão' ? 'bg-amber-500' : p.kind === 'Pix' ? 'bg-cyan-600' : 'bg-gray-400'}`;
+  b.innerHTML = `<span class="text-[10px] font-black uppercase leading-none">${p.label}</span><span class="text-[8px] opacity-80 mt-1">${p.sub}</span>`;
   b.onclick = () => addEntry(p);
   container.appendChild(b);
 });
@@ -132,7 +128,7 @@ dateEl.onchange = (e) => { currentDate = e.target.value; load(); };
 function toggleBlur() { isValueVisible = !isValueVisible; document.getElementById('eyeIcon').textContent = isValueVisible ? '👁️' : '🙈'; render(); }
 
 function load() {
-  const data = localStorage.getItem(`ctj_v4_${currentDate}`);
+  const data = localStorage.getItem(`ctj_final_${currentDate}`);
   entries = data ? JSON.parse(data) : [];
   render();
 }
@@ -152,21 +148,24 @@ function render() {
   const totals = entries.reduce((a, b) => ({ p: a.p + b.people, v: a.v + b.price }), { p: 0, v: 0 });
   document.getElementById('totalPeople').textContent = totals.p;
   document.getElementById('totalCollected').textContent = `R$ ${totals.v.toFixed(2)}`;
+  document.getElementById('totalCollected').classList.toggle('hidden-value', !isValueVisible);
 }
 
 function addEntry(p) {
   entries.unshift({ id: Date.now(), time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}), type: p.label + ' ' + p.sub, price: p.price, people: p.people, kind: p.kind });
-  localStorage.setItem(`ctj_v4_${currentDate}`, JSON.stringify(entries));
+  localStorage.setItem(`ctj_final_${currentDate}`, JSON.stringify(entries));
   render();
 }
 
 window.deleteEntry = (id) => {
-  if(confirm('Excluir?')) { entries = entries.filter(e => e.id !== id); localStorage.setItem(`ctj_v4_${currentDate}`, JSON.stringify(entries)); render(); }
+  if(confirm('Excluir?')) { entries = entries.filter(e => e.id !== id); localStorage.setItem(`ctj_final_${currentDate}`, JSON.stringify(entries)); render(); }
 };
 
+// GERAÇÃO VISUAL (PARA O PAINEL COM GRÁFICO)
 document.getElementById('btnOpenReport').onclick = () => {
   if(entries.length === 0) return alert("Sem dados.");
   document.getElementById('reportPanel').classList.remove('hidden');
+  
   const byKind = {};
   entries.forEach(e => { byKind[e.kind] = (byKind[e.kind] || 0) + e.price; });
   const totals = entries.reduce((a, b) => ({ p: a.p + b.people, v: a.v + b.price }), { p: 0, v: 0 });
@@ -200,6 +199,7 @@ document.getElementById('btnOpenReport').onclick = () => {
   document.getElementById('reportPanel').scrollIntoView({ behavior: 'smooth' });
 };
 
+// DOWNLOAD PDF (APENAS NÚMEROS CONSOLIDADOS - SEM LISTA)
 document.getElementById('downloadPdf').onclick = () => {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
@@ -213,6 +213,7 @@ document.getElementById('downloadPdf').onclick = () => {
 
   doc.setFontSize(14); doc.setFont(undefined, 'bold');
   doc.text("DADOS CONSOLIDADOS", 15, 50);
+  
   doc.setFontSize(11); doc.setFont(undefined, 'normal');
   doc.text(`Publico Total: ${totals.p} pessoas`, 15, 60);
   doc.setFont(undefined, 'bold');
@@ -226,10 +227,13 @@ document.getElementById('downloadPdf').onclick = () => {
     currentY += 10;
   });
 
+  doc.setFontSize(9); doc.setTextColor(150);
+  doc.text(`Documento gerado em: ${new Date().toLocaleString()}`, 105, 280, { align: "center" });
+
   doc.save(`Fechamento_${currentDate}.pdf`);
 };
 
-document.getElementById('resetDay').onclick = () => { if(confirm('Zerar?')) { entries=[]; localStorage.removeItem(`ctj_v4_${currentDate}`); render(); } };
+document.getElementById('resetDay').onclick = () => { if(confirm('Zerar?')) { entries=[]; localStorage.removeItem(`ctj_final_${currentDate}`); render(); } };
 load();
 </script>
 </body>
