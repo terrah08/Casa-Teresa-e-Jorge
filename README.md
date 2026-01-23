@@ -11,7 +11,7 @@
 
 <style>
   .btn { @apply px-3 py-2 rounded-xl text-white shadow-md transition-all duration-200 active:scale-95 flex items-center justify-center gap-2; }
-  /* Classe que aplica o desfoque */
+  /* Oculta apenas o elemento que tiver esta classe */
   .hidden-value { filter: blur(6px); pointer-events: none; user-select: none; }
   #chartWrapper { width: 100%; max-width: 300px; margin: 0 auto; }
   .btn-disabled { @apply bg-gray-300 shadow-none cursor-not-allowed scale-100 opacity-60 !important; }
@@ -82,12 +82,10 @@
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
           <div id="reportSummary" class="bg-gray-50 p-5 rounded-2xl border space-y-3"></div>
-          
           <div class="space-y-4">
              <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest border-b pb-1">Pessoas por Categoria</h3>
              <div id="reportTotals" class="space-y-1"></div>
           </div>
-          
           <div id="chartWrapper">
             <canvas id="reportChart"></canvas>
           </div>
@@ -155,26 +153,24 @@ function load() {
 function render() {
   renderButtons();
   const body = document.getElementById('entriesBody');
-  const blurClass = isValueVisible ? '' : 'hidden-value';
   
-  // Renderiza tabela com desfoque condicional
+  // Tabela sempre visível (sem blur)
   body.innerHTML = entries.map(e => `
     <tr class="hover:bg-gray-50 border-b border-gray-50">
       <td class="p-3 text-gray-400 font-mono">${e.time}</td>
       <td class="p-3 font-bold text-gray-700 uppercase text-[10px]">${e.type}</td>
-      <td class="p-3 text-right font-black ${blurClass}">R$ ${e.price.toFixed(2)}</td>
+      <td class="p-3 text-right font-black">R$ ${e.price.toFixed(2)}</td>
       <td class="p-3 text-center"><button onclick="deleteEntry(${e.id})" class="text-red-200 hover:text-red-500">✕</button></td>
     </tr>
   `).join('');
 
   const totals = entries.reduce((a, b) => ({ p: a.p + b.people, v: a.v + b.price }), { p: 0, v: 0 });
-  
-  // Atualiza Públic Total
   document.getElementById('totalPeople').textContent = totals.p;
   
-  // Atualiza Caixa Total e aplica desfoque condicional
+  // Oculta APENAS o card de "Caixa Total"
   const totalCollectedEl = document.getElementById('totalCollected');
   totalCollectedEl.textContent = `R$ ${totals.v.toFixed(2)}`;
+  
   if (!isValueVisible) {
     totalCollectedEl.classList.add('hidden-value');
   } else {
