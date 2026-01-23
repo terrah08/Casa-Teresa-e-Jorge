@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8" />
@@ -79,12 +80,14 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
           <div id="reportSummary" class="bg-gray-50 p-5 rounded-2xl border space-y-3"></div>
+          
           <div class="space-y-4">
              <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest border-b pb-1">Pessoas por Categoria</h3>
              <div id="reportTotals" class="space-y-1"></div>
           </div>
+          
           <div id="chartWrapper">
             <canvas id="reportChart"></canvas>
           </div>
@@ -122,7 +125,6 @@ function renderButtons() {
   const container = document.getElementById('buttonsContainer');
   container.innerHTML = '';
   const count100 = entries.filter(e => e.type.includes("100 Pessoas")).length;
-
   PRICE_TYPES.forEach(p => {
     const b = document.createElement('button');
     let sub = p.sub;
@@ -188,12 +190,21 @@ document.getElementById('btnOpenReport').onclick = () => {
   const first = new Date(times[0]).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
   const last = new Date(times[times.length-1]).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
 
+  // AJUSTE: Valor Caixa e Ticket Médio na mesma linha (flexbox)
   document.getElementById('reportSummary').innerHTML = `
-    <h3 class="font-black text-emerald-700 uppercase text-[10px]">Resumo do Evento</h3>
-    <div class="flex justify-between text-xs"><span>Início:</span><b>${first}</b></div>
-    <div class="flex justify-between text-xs"><span>Fim:</span><b>${last}</b></div>
-    <div class="flex justify-between text-sm border-t pt-2 mt-2"><span>Ticket Médio:</span><b class="text-blue-500">R$ ${(totals.v/totals.p).toFixed(2)}</b></div>
-    <div class="flex justify-between text-2xl font-black mt-4 border-t-2 pt-2"><span>CAIXA:</span><span class="text-emerald-600">R$ ${totals.v.toFixed(2)}</span></div>
+    <h3 class="font-black text-emerald-700 uppercase text-[10px] mb-2 tracking-widest">Relatório de Horários</h3>
+    <div class="flex justify-between text-xs py-1"><span>Entrada 1ª Pessoa:</span><b>${first}</b></div>
+    <div class="flex justify-between text-xs py-1"><span>Último Registro:</span><b>${last}</b></div>
+    <div class="border-t border-gray-200 my-3 pt-3">
+        <div class="flex justify-between items-center mb-1">
+            <span class="text-[10px] font-bold text-gray-400 uppercase">Ticket Médio</span>
+            <b class="text-blue-600 text-sm">R$ ${(totals.v/totals.p).toFixed(2)}</b>
+        </div>
+        <div class="flex justify-between items-center">
+            <span class="text-sm font-black text-gray-700 uppercase">VALOR CAIXA</span>
+            <span class="text-xl font-black text-emerald-600">R$ ${totals.v.toFixed(2)}</span>
+        </div>
+    </div>
   `;
 
   document.getElementById('reportTotals').innerHTML = Object.entries(stats).map(([k, v]) => `
@@ -209,9 +220,7 @@ document.getElementById('btnOpenReport').onclick = () => {
     data: { labels: Object.keys(stats), datasets: [{ data: Object.values(stats).map(v => v.money), backgroundColor: ['#10b981', '#f59e0b', '#06b6d4', '#cbd5e1'] }] },
     plugins: [ChartDataLabels],
     options: { 
-      responsive: true, 
-      maintainAspectRatio: false,
-      animation: false, 
+      responsive: true, maintainAspectRatio: false, animation: false,
       plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 9 } } }, datalabels: { color: '#000', font: { weight: 'bold', size: 9 }, formatter: v => v > 0 ? `R$${v.toFixed(0)}` : '' } } 
     }
   });
@@ -229,33 +238,29 @@ document.getElementById('downloadPdf').onclick = () => {
     stats[e.kind].people += e.people;
   });
 
-  doc.setFontSize(22); doc.text("CASA TERESA E JORGE", 105, 20, { align: "center" });
-  doc.setFontSize(10); doc.text(`RELATORIO DE FECHAMENTO - ${currentDate.split('-').reverse().join('/')}`, 105, 28, { align: "center" });
-  doc.line(15, 32, 195, 32);
+  doc.setFontSize(20); doc.setTextColor(22, 163, 74); doc.text("CASA TERESA E JORGE", 105, 20, { align: "center" });
+  doc.setFontSize(10); doc.setTextColor(100, 100, 100); doc.text(`FECHAMENTO: ${currentDate.split('-').reverse().join('/')}`, 105, 28, { align: "center" });
+  doc.setDrawColor(200, 200, 200); doc.line(15, 32, 195, 32);
 
-  doc.setFontSize(12); doc.setFont(undefined, 'bold');
+  doc.setFontSize(12); doc.setFont(undefined, 'bold'); doc.setTextColor(0, 0, 0);
   doc.text("RESUMO GERAL", 15, 45);
   doc.setFontSize(10); doc.setFont(undefined, 'normal');
   doc.text(`Publico Total: ${totals.p} pessoas`, 15, 55);
-  doc.text(`Valor Total Arrecadado: R$ ${totals.v.toFixed(2)}`, 15, 62);
-  
   doc.setFont(undefined, 'bold');
+  doc.text(`VALOR TOTAL CAIXA: R$ ${totals.v.toFixed(2)}`, 15, 62);
+  
   doc.text("DETALHAMENTO POR CATEGORIA:", 15, 75);
   let currentY = 85;
   Object.entries(stats).forEach(([k, v]) => {
-    doc.setFont(undefined, 'bold');
-    doc.text(`${k}:`, 20, currentY);
-    doc.setFont(undefined, 'normal');
-    doc.text(`${v.people} pessoas`, 60, currentY);
+    doc.setFont(undefined, 'bold'); doc.text(`${k}:`, 20, currentY);
+    doc.setFont(undefined, 'normal'); doc.text(`${v.people} pessoas`, 60, currentY);
     doc.text(`Subtotal: R$ ${v.money.toFixed(2)}`, 110, currentY);
     currentY += 10;
   });
 
-  // --- ADICIONANDO O GRÁFICO AO PDF ---
   const canvas = document.getElementById('reportChart');
   if (canvas) {
     const imgData = canvas.toDataURL('image/png', 1.0);
-    // Adiciona a imagem centralizada (x=55, y=posicao_atual+10, largura=100, altura=100)
     doc.addImage(imgData, 'PNG', 55, currentY + 10, 100, 100);
   }
 
