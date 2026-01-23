@@ -12,11 +12,23 @@
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
 <style>
-  .btn { @apply px-3 py-2 rounded-xl text-white shadow-md transition-all duration-200 active:scale-95; }
+  .btn { @apply rounded-xl text-white shadow-md transition-all duration-200 active:scale-95 flex flex-col items-center justify-center text-center; }
   .hidden-value { filter: blur(6px); pointer-events: none; user-select: none; }
-  #reportPanel { min-width: 320px; }
+  
+  /* Ajuste do título para não quebrar */
   .title-nowrap { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .chart-container { position: relative; height: 300px; width: 100%; }
+
+  /* Estilo dos textos dentro do botão (2 linhas) */
+  .label-main { font-size: 10px; font-weight: 900; text-transform: uppercase; white-space: nowrap; line-height: 1; }
+  .label-sub { font-size: 8px; font-weight: 500; opacity: 0.85; white-space: nowrap; margin-top: 2px; }
+
+  @media (min-width: 640px) {
+    .label-main { font-size: 12px; }
+    .label-sub { font-size: 9px; }
+  }
+
+  /* Container do gráfico para o PDF */
+  .chart-container { position: relative; height: 280px; width: 100%; background: white; }
 </style>
 </head>
 <body class="bg-gray-50 min-h-screen p-2 md:p-8 text-gray-800">
@@ -27,8 +39,9 @@
         <h1 class="text-lg sm:text-xl md:text-2xl font-black title-nowrap">
           Casa Teresa e Jorge <span class="inline-block">🟩🩷</span>
         </h1>
-        <div class="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Gestão Profissional</div>
+        <div class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Gestão de Portaria</div>
       </div>
+
       <div class="flex gap-2 items-center bg-gray-50 p-1.5 rounded-lg border border-gray-100 self-end md:self-auto">
         <input id="currentDate" type="date" class="border-0 bg-transparent text-xs font-bold focus:ring-0" />
         <button id="resetDay" class="text-red-400 hover:text-red-600 px-2">🗑️</button>
@@ -36,32 +49,36 @@
     </header>
 
     <main class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      
       <section class="bg-white p-4 rounded-xl shadow col-span-1 border-t-4 border-blue-500">
-        <h2 class="font-bold text-gray-700 mb-4 text-xs uppercase">📝 Entradas</h2>
+        <h2 class="font-bold text-gray-700 mb-4 text-xs uppercase tracking-wider">📝 Lançar Entrada</h2>
         <div id="buttonsContainer" class="grid grid-cols-2 gap-2 mb-6"></div>
-        <button id="generateReport" class="w-full btn bg-blue-600 font-bold text-sm">📄 GERAR RELATÓRIO PDF</button>
+        <div class="pt-4 border-t">
+          <button id="generateReport" class="w-full py-3 bg-blue-600 rounded-xl text-white font-bold text-sm shadow-lg active:scale-95 transition-all">📄 GERAR RELATÓRIO PDF</button>
+        </div>
       </section>
 
       <section class="bg-white p-4 rounded-xl shadow col-span-2 border-t-4 border-emerald-500">
         <div class="grid grid-cols-2 gap-4 mb-6">
-          <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-100">
-            <div class="text-[10px] text-emerald-600 font-bold uppercase">Público</div>
+          <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-100 text-center sm:text-left">
+            <div class="text-[10px] text-emerald-600 font-bold uppercase">Público Total</div>
             <div id="totalPeople" class="text-2xl font-black text-emerald-900">0</div>
           </div>
-          <div class="bg-blue-50 p-3 rounded-xl border border-blue-100 relative">
+          <div class="bg-blue-50 p-3 rounded-xl border border-blue-100 relative text-center sm:text-left">
             <div class="flex justify-between items-center">
               <div class="text-[10px] text-blue-600 font-bold uppercase">Caixa</div>
-              <button id="toggleValue" class="text-lg leading-none"><span id="eyeIcon">👁️</span></button>
+              <button id="toggleValue" class="text-lg leading-none"> <span id="eyeIcon">👁️</span> </button>
             </div>
             <div id="totalCollected" class="text-2xl font-black text-blue-900">R$ 0,00</div>
           </div>
         </div>
+
         <div id="tableWrapper" class="overflow-x-auto rounded-lg">
-          <table class="min-w-full text-xs text-left">
-            <thead class="bg-gray-50 text-gray-400 uppercase font-bold">
+          <table class="min-w-full text-xs">
+            <thead class="bg-gray-50 text-gray-400 uppercase">
               <tr>
-                <th class="p-2">Hora</th>
-                <th class="p-2">Tipo</th>
+                <th class="p-2 text-left">Hora</th>
+                <th class="p-2 text-left">Tipo</th>
                 <th class="p-2 text-right">Valor</th>
                 <th class="p-2 text-center">✕</th>
               </tr>
@@ -72,16 +89,17 @@
       </section>
 
       <section id="reportPanel" class="bg-white p-6 rounded-xl shadow-2xl col-span-3 hidden border-b-8 border-emerald-500">
-        <div class="flex justify-between items-center mb-6 border-b pb-4">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 border-b pb-4">
           <div>
-            <h2 class="text-xl font-black text-gray-800 uppercase italic">Fechamento</h2>
-            <p class="text-[10px] text-gray-400 font-bold">CASA TERESA E JORGE</p>
+            <h2 class="text-xl font-black text-gray-800 uppercase italic">Fechamento de Caixa</h2>
+            <p class="text-xs text-gray-400 font-bold uppercase">Casa Teresa e Jorge</p>
           </div>
-          <div class="flex gap-2">
-            <button id="downloadPdf" class="btn bg-emerald-600 font-bold text-xs">💾 BAIXAR PDF</button>
-            <button id="closeReport" class="btn bg-gray-400 text-xs">FECHAR</button>
+          <div class="flex gap-2 w-full sm:w-auto">
+            <button id="downloadPdf" class="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg font-bold text-xs">💾 BAIXAR PDF</button>
+            <button id="closeReport" class="px-4 py-2 bg-gray-400 text-white rounded-lg text-xs">FECHAR</button>
           </div>
         </div>
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div id="reportSummary" class="space-y-2 text-sm bg-gray-50 p-4 rounded-xl border"></div>
           <div id="reportTotals" class="space-y-1"></div>
@@ -97,31 +115,32 @@
 
 <script>
 const PRICE_TYPES = [
-  { id: "20_din", label: "Dinheiro R$20 Individual", price: 20, people: 1, kind: "Dinheiro" },
-  { id: "30_din", label: "Dinheiro R$30 Individual", price: 30, people: 1, kind: "Dinheiro" },
-  { id: "50_din", label: "Dinheiro R$50 Dupla", price: 50, people: 2, kind: "Dinheiro" },
-  { id: "20_cart", label: "Cartão R$20 Individual", price: 20, people: 1, kind: "Cartão" },
-  { id: "30_cart", label: "Cartão R$30 Individual", price: 30, people: 1, kind: "Cartão" },
-  { id: "50_cart", label: "Cartão R$50 Dupla", price: 50, people: 2, kind: "Cartão" },
-  { id: "20_pix", label: "Pix R$20 Individual", price: 20, people: 1, kind: "Pix" },
-  { id: "30_pix", label: "Pix R$30 Individual", price: 30, people: 1, kind: "Pix" },
-  { id: "50_pix", label: "Pix R$50 Dupla", price: 50, people: 2, kind: "Pix" },
-  { id: "free100", label: "100 Pessoas FREE", price: 0, people: 100, kind: "Gratuidade" },
-  { id: "free", label: "Lista Individual", price: 0, people: 1, kind: "Gratuidade" },
-  { id: "aniv", label: "Aniversário", price: 0, people: 1, kind: "Gratuidade" },
-  { id: "milt", label: "Militar", price: 0, people: 1, kind: "Gratuidade" }
+  { id: "20_din", main: "Dinheiro R$20", sub: "Individual", price: 20, people: 1, kind: "Dinheiro" },
+  { id: "30_din", main: "Dinheiro R$30", sub: "Individual", price: 30, people: 1, kind: "Dinheiro" },
+  { id: "50_din", main: "Dinheiro R$50", sub: "Dupla", price: 50, people: 2, kind: "Dinheiro" },
+  { id: "20_car", main: "Cartão R$20", sub: "Individual", price: 20, people: 1, kind: "Cartão" },
+  { id: "30_car", main: "Cartão R$30", sub: "Individual", price: 30, people: 1, kind: "Cartão" },
+  { id: "50_car", main: "Cartão R$50", sub: "Dupla", price: 50, people: 2, kind: "Cartão" },
+  { id: "20_pix", main: "Pix R$20", sub: "Individual", price: 20, people: 1, kind: "Pix" },
+  { id: "30_pix", main: "Pix R$30", sub: "Individual", price: 30, people: 1, kind: "Pix" },
+  { id: "50_pix", main: "Pix R$50", sub: "Dupla", price: 50, people: 2, kind: "Pix" },
+  { id: "f100", main: "100 Pessoas", sub: "FREE", price: 0, people: 100, kind: "Gratuidade" },
+  { id: "list", main: "Lista", sub: "Individual", price: 0, people: 1, kind: "Gratuidade" },
+  { id: "aniv", main: "Aniversário", sub: "Isento", price: 0, people: 1, kind: "Gratuidade" },
+  { id: "milt", main: "Militar", sub: "Isento", price: 0, people: 1, kind: "Gratuidade" }
 ];
 
 const buttonsContainer = document.getElementById('buttonsContainer');
 PRICE_TYPES.forEach(p => {
   const b = document.createElement('button');
-  b.className = 'p-2 rounded-lg text-white text-[9px] font-black shadow uppercase leading-tight';
+  b.className = 'btn h-14'; 
   if (p.kind === "Dinheiro") b.classList.add("bg-green-600");
   else if (p.kind === "Cartão") b.classList.add("bg-amber-500");
   else if (p.kind === "Pix") b.classList.add("bg-cyan-600");
-  else if (p.id === "free100") b.classList.add("bg-purple-600");
+  else if (p.id === "f100") b.classList.add("bg-purple-600");
   else b.classList.add("bg-gray-400");
-  b.textContent = p.label;
+  
+  b.innerHTML = `<span class="label-main">${p.main}</span><span class="label-sub">${p.sub}</span>`;
   b.onclick = () => addEntry(p.id);
   buttonsContainer.appendChild(b);
 });
@@ -141,7 +160,7 @@ document.getElementById('toggleValue').onclick = () => {
 };
 
 function load() {
-  const data = localStorage.getItem(`ctj_new_${currentDate}`);
+  const data = localStorage.getItem(`ctj_final_${currentDate}`);
   entries = data ? JSON.parse(data) : [];
   render();
 }
@@ -152,7 +171,7 @@ function render() {
   body.innerHTML = entries.map(e => `
     <tr>
       <td class="p-2 text-gray-400 font-mono">${new Date(e.ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</td>
-      <td class="p-2 font-bold text-gray-600 text-[10px]">${e.type}</td>
+      <td class="p-2 font-bold text-gray-600 text-[10px] uppercase">${e.type}</td>
       <td class="p-2 text-right font-black ${blur}">R$ ${e.price.toFixed(2)}</td>
       <td class="p-2 text-center"><button onclick="deleteEntry(${e.id})" class="text-red-300 px-2">✕</button></td>
     </tr>
@@ -165,15 +184,15 @@ function render() {
 
 function addEntry(id) {
   const t = PRICE_TYPES.find(x => x.id === id);
-  entries.unshift({ id: Date.now(), ts: new Date().toISOString(), type: t.label, price: t.price, people: t.people, kind: t.kind });
-  localStorage.setItem(`ctj_new_${currentDate}`, JSON.stringify(entries));
+  entries.unshift({ id: Date.now(), ts: new Date().toISOString(), type: t.main + ' ' + t.sub, price: t.price, people: t.people, kind: t.kind });
+  localStorage.setItem(`ctj_final_${currentDate}`, JSON.stringify(entries));
   render();
 }
 
 window.deleteEntry = (id) => {
-  if(!confirm('Excluir?')) return;
+  if(!confirm('Excluir registro?')) return;
   entries = entries.filter(e => e.id !== id);
-  localStorage.setItem(`ctj_new_${currentDate}`, JSON.stringify(entries));
+  localStorage.setItem(`ctj_final_${currentDate}`, JSON.stringify(entries));
   render();
 };
 
@@ -193,9 +212,9 @@ function generateVisual() {
   });
 
   document.getElementById('reportSummary').innerHTML = `
-    <h3 class="font-black text-emerald-700 uppercase border-b mb-1 text-xs">Geral</h3>
+    <h3 class="font-black text-emerald-700 uppercase border-b mb-1 text-xs">Resumo Geral</h3>
     <p class="flex justify-between">Público: <b>${totals.p}p</b></p>
-    <p class="flex justify-between text-base">Líquido: <b>R$ ${totals.v.toFixed(2)}</b></p>
+    <p class="flex justify-between text-base">Caixa: <b>R$ ${totals.v.toFixed(2)}</b></p>
   `;
 
   document.getElementById('reportTotals').innerHTML = Object.entries(byKind).map(([k, v]) => `
@@ -206,47 +225,58 @@ function generateVisual() {
   `).join('');
 
   if(reportChart) reportChart.destroy();
-  const ctx = document.getElementById('reportChart').getContext('2d');
+  
+  // Ajuste para celular renderizar o canvas corretamente para captura
+  const ctx = document.getElementById('reportChart').getContext('2d', { willReadFrequently: true });
+  
   reportChart = new Chart(ctx, {
     type: 'doughnut',
     data: {
       labels: Object.keys(byKind),
-      datasets: [{ data: Object.values(byKind).map(x => x.v), backgroundColor: ['#10b981', '#f59e0b', '#06b6d4', '#8b5cf6', '#64748b'] }]
+      datasets: [{ 
+        data: Object.values(byKind).map(x => x.v), 
+        backgroundColor: ['#10b981', '#f59e0b', '#06b6d4', '#8b5cf6', '#64748b'] 
+      }]
     },
     plugins: [ChartDataLabels],
     options: { 
       responsive: true,
       maintainAspectRatio: false,
-      animation: { duration: 0 }, // ESSENCIAL: Gráfico já aparece pronto para o PDF
+      animation: false, // Desliga animação para o PDF não sair branco
       plugins: { 
         legend: { position: 'bottom', labels: { boxWidth: 8, font: { size: 9 } } },
-        datalabels: { color: '#fff', font: { weight: 'bold', size: 10 }, formatter: (v) => v > 0 ? `R$${v.toFixed(0)}` : '' }
+        datalabels: { 
+          color: '#fff', 
+          font: { weight: 'bold', size: 10 }, 
+          formatter: (v) => v > 0 ? `R$${v.toFixed(0)}` : '' 
+        }
       }
     }
   });
+  reportChart.update(); // Força desenho síncrono
 }
 
 document.getElementById('downloadPdf').onclick = async () => {
   const btnPdf = document.getElementById('downloadPdf');
   const btnClose = document.getElementById('closeReport');
   
-  // Esconde os botões para não saírem na "foto" do PDF
   btnPdf.style.visibility = 'hidden';
   btnClose.style.visibility = 'hidden';
 
-  // Aguarda 1 segundo para garantir que o renderizador do celular terminou tudo
-  await new Promise(r => setTimeout(r, 1000));
+  // Pausa essencial para navegadores mobile terminarem o render
+  await new Promise(r => setTimeout(r, 800));
 
+  const panel = document.getElementById('reportPanel');
+  
   try {
-    const panel = document.getElementById('reportPanel');
     const canvas = await html2canvas(panel, { 
-      scale: 2, 
+      scale: 1.5, 
       useCORS: true,
-      logging: false,
-      backgroundColor: "#ffffff" 
+      backgroundColor: "#ffffff",
+      logging: false 
     });
     
-    const imgData = canvas.toDataURL('image/png');
+    const imgData = canvas.toDataURL('image/png', 1.0);
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF('p', 'mm', 'a4');
     
@@ -254,7 +284,7 @@ document.getElementById('downloadPdf').onclick = async () => {
     const imgH = (canvas.height * imgW) / canvas.width;
 
     pdf.setFontSize(14);
-    pdf.text(`CASA TERESA E JORGE - CAIXA ${currentDate}`, 10, 15);
+    pdf.text(`RELATORIO DE CAIXA - ${currentDate.split('-').reverse().join('/')}`, 10, 15);
     pdf.addImage(imgData, 'PNG', 10, 20, imgW, imgH);
     pdf.save(`caixa_${currentDate}.pdf`);
   } catch (err) {
@@ -266,7 +296,7 @@ document.getElementById('downloadPdf').onclick = async () => {
 };
 
 document.getElementById('closeReport').onclick = () => document.getElementById('reportPanel').classList.add('hidden');
-document.getElementById('resetDay').onclick = () => { if(confirm('Zerar hoje?')) { entries=[]; localStorage.removeItem(`ctj_new_${currentDate}`); render(); } };
+document.getElementById('resetDay').onclick = () => { if(confirm('Zerar hoje?')) { entries=[]; localStorage.removeItem(`ctj_final_${currentDate}`); render(); } };
 currentDateEl.onchange = (e) => { currentDate = e.target.value; load(); };
 
 load();
