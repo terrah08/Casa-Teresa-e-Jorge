@@ -11,6 +11,7 @@
 
 <style>
   .btn { @apply px-3 py-2 rounded-xl text-white shadow-md transition-all duration-200 active:scale-95 flex items-center justify-center gap-2; }
+  /* Classe que aplica o desfoque */
   .hidden-value { filter: blur(6px); pointer-events: none; user-select: none; }
   #chartWrapper { width: 100%; max-width: 300px; margin: 0 auto; }
   .btn-disabled { @apply bg-gray-300 shadow-none cursor-not-allowed scale-100 opacity-60 !important; }
@@ -49,9 +50,9 @@
           <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 relative text-center">
             <div class="flex justify-between items-center px-2">
               <div class="text-[10px] text-blue-600 font-bold uppercase">Caixa Total</div>
-              <button onclick="toggleBlur()" class="text-sm"> <span id="eyeIcon">👁️</span> </button>
+              <button onclick="toggleBlur()" class="text-sm focus:outline-none"> <span id="eyeIcon">👁️</span> </button>
             </div>
-            <div id="totalCollected" class="text-4xl font-black text-blue-900">R$ 0,00</div>
+            <div id="totalCollected" class="text-4xl font-black text-blue-900 transition-all">R$ 0,00</div>
           </div>
         </div>
 
@@ -118,7 +119,11 @@ let isValueVisible = true;
 let chartInstance = null;
 let currentDate = new Date().toISOString().slice(0,10);
 
-function toggleBlur() { isValueVisible = !isValueVisible; document.getElementById('eyeIcon').textContent = isValueVisible ? '👁️' : '🙈'; render(); }
+function toggleBlur() { 
+  isValueVisible = !isValueVisible; 
+  document.getElementById('eyeIcon').textContent = isValueVisible ? '👁️' : '🙈'; 
+  render(); 
+}
 
 function renderButtons() {
   const container = document.getElementById('buttonsContainer');
@@ -151,6 +156,8 @@ function render() {
   renderButtons();
   const body = document.getElementById('entriesBody');
   const blurClass = isValueVisible ? '' : 'hidden-value';
+  
+  // Renderiza tabela com desfoque condicional
   body.innerHTML = entries.map(e => `
     <tr class="hover:bg-gray-50 border-b border-gray-50">
       <td class="p-3 text-gray-400 font-mono">${e.time}</td>
@@ -159,9 +166,20 @@ function render() {
       <td class="p-3 text-center"><button onclick="deleteEntry(${e.id})" class="text-red-200 hover:text-red-500">✕</button></td>
     </tr>
   `).join('');
+
   const totals = entries.reduce((a, b) => ({ p: a.p + b.people, v: a.v + b.price }), { p: 0, v: 0 });
+  
+  // Atualiza Públic Total
   document.getElementById('totalPeople').textContent = totals.p;
-  document.getElementById('totalCollected').textContent = `R$ ${totals.v.toFixed(2)}`;
+  
+  // Atualiza Caixa Total e aplica desfoque condicional
+  const totalCollectedEl = document.getElementById('totalCollected');
+  totalCollectedEl.textContent = `R$ ${totals.v.toFixed(2)}`;
+  if (!isValueVisible) {
+    totalCollectedEl.classList.add('hidden-value');
+  } else {
+    totalCollectedEl.classList.remove('hidden-value');
+  }
 }
 
 function addEntry(p) {
@@ -189,7 +207,6 @@ document.getElementById('btnOpenReport').onclick = () => {
   const first = new Date(times[0]).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
   const last = new Date(times[times.length-1]).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
 
-  // AJUSTE: Valor Caixa e Ticket Médio na mesma linha (flexbox)
   document.getElementById('reportSummary').innerHTML = `
     <h3 class="font-black text-emerald-700 uppercase text-[10px] mb-2 tracking-widest">Relatório de Horários</h3>
     <div class="flex justify-between text-xs py-1"><span>Entrada 1ª Pessoa:</span><b>${first}</b></div>
