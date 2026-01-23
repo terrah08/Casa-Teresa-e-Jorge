@@ -1,73 +1,66 @@
-<!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>Portaria - Segunda Sem Leite (Relatório Profissional)</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-    <style>
-        .btn { @apply px-3 py-2 rounded-xl text-white shadow-md transition-all duration-200; }
-        .small { font-size: .85rem; }
-        .table-fixed td, .table-fixed th { vertical-align: middle; }
-        .hidden-value { filter: blur(6px); pointer-events: none; user-select: none; }
-    </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Portaria - Segunda Sem Leite (Relatório Profissional)</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+<style>
+  .btn {
+  @apply px-3 py-2 rounded-xl text-white shadow-md transition-all duration-200;
+}
+  .small { font-size: .85rem; }
+  .table-fixed td, .table-fixed th { vertical-align: middle; }
+  /* Estilo para esconder o valor sem quebrar o layout */
+  .hidden-value { filter: blur(5px); pointer-events: none; user-select: none; }
+</style>
 </head>
-<body class="bg-gray-100 p-4">
+<body class="bg-gray-50 min-h-screen p-4 md:p-8">
 
-<header class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-  <div class="flex items-center gap-4">
-    <div>
-      <h1 class="text-2xl md:text-3xl font-extrabold text-gray-800">Portaria - Segunda Sem Leite 🥛🚫</h1>
-      <div class="text-sm text-gray-500">Controle de entradas e arrecadação</div>
-    </div>
-  </div>
+  <div class="max-w-6xl mx-auto">
 
-  <div class="flex gap-3 items-center">
-    <label class="small text-gray-600 font-bold">Dia:</label>
-    <input id="currentDate" type="date" class="border rounded px-2 py-1" />
-    <button id="saveDay" class="btn bg-green-600 hover:bg-green-700 small">Salvar</button>
-    <button id="resetDay" class="btn bg-red-600 hover:bg-red-700 small">Resetar</button>
-  </div>
-</header>
-
-<main class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-  <section class="bg-white p-4 rounded-xl shadow col-span-1">
-    <h2 class="font-semibold mb-4 border-b pb-2 text-gray-700">Registrar entrada</h2>
-    <div id="buttonsContainer" class="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-6"></div>
-    <div class="flex flex-col gap-2">
-      <button id="generateReport" class="btn bg-blue-600 hover:bg-blue-700 font-bold">📄 Gerar Relatório (PDF)</button>
-      <button id="exportCSV" class="btn bg-indigo-600 hover:bg-indigo-700 small">Exportar CSV</button>
-    </div>
-  </section>
-
-  <section class="bg-white p-4 rounded-xl shadow col-span-2">
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-      <div class="flex gap-4">
-        <div class="bg-gray-100 p-3 rounded-lg text-center min-w-[100px]">
-          <div class="text-xs text-gray-500 uppercase font-bold mb-1">Pessoas</div>
-          <div id="totalPeople" class="text-2xl font-bold">0</div>
-        </div>
-        <div class="bg-gray-100 p-3 rounded-lg text-center min-w-[140px] relative">
-          <div class="flex items-center justify-center gap-2 mb-1">
-             <span class="text-xs text-gray-500 uppercase font-bold">Valor Total</span>
-             <button id="toggleValue" class="text-sm opacity-60 hover:opacity-100 transition-opacity">
-                <span id="eyeIcon">👁️</span>
-             </button>
-          </div>
-          <div id="totalCollected" class="text-2xl font-bold">R$ 0,00</div>
+    <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+      <div class="flex items-center gap-4">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-extrabold">Portaria - Segunda Sem Leite 🥛🚫</h1>
+          <div class="text-sm text-gray-500">Controle de entradas, arrecadação e relatórios profissionais</div>
         </div>
       </div>
-      <div class="flex gap-2">
-        <button id="openReportPanel" class="btn bg-emerald-600 hover:bg-emerald-700 small">Ver Painel</button>
-        <button id="toggleTable" class="btn bg-slate-600 hover:bg-slate-700 small">Tabela</button>
-      </div>
-    </div>
 
-    <div id="tableWrapper" class="mt-4 overflow-x-auto border-t">
+      <div class="flex gap-3 items-center">
+        <label class="small text-gray-600">Dia:</label>
+        <input id="currentDate" type="date" class="border rounded px-2 py-1" />
+        <button id="saveDay" class="btn bg-green-600 hover:bg-green-700 small">Salvar</button>
+        <button id="resetDay" class="btn bg-red-600 hover:bg-red-700 small">Resetar</button>
+      </div>
+    </header>
+
+    <main class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      <section class="bg-white p-4 rounded-xl shadow col-span-1">
+        <h2 class="font-semibold mb-2">Registrar entrada</h2>
+
+        <div id="buttonsContainer" class="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3"></div>
+
+        <div class="flex gap-2">
+          <button id="exportCSV" class="btn bg-indigo-600 hover:bg-indigo-700 small">Exportar CSV</button>
+          <button id="generateReport" class="btn bg-blue-600 hover:bg-blue-700 small">Gerar Relatório (PDF)</button>
+        </div>
+      </section>
+
+      <section class="bg-white p-4 rounded-xl shadow col-span-2">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div class="flex gap-4">
+            <div class="bg-gray-100 p-3 rounded-lg text-center min-w-[100px]">
+              <div class="text-xs text-gray-500 uppercase font-bold mb-1">Pessoas</div>
       <table class="min-w-full table-fixed text-sm bg-white">
         <thead class="bg-gray-50">
           <tr>
