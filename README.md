@@ -1,4 +1,4 @@
-<html lang="pt-BR">
+[<html lang="pt-BR">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -138,6 +138,7 @@ const PRICE_TYPES = [
   { id: "30_cartao", label: "Cartão - R$30 Dupla", price: 30, people: 2, kind: "Crédito" },
   { id: "50_cartao", label: "Cartão- R$50 Dupla", price: 50, people: 2, kind: "Crédito" },
 
+  { id: "20_pix", label: "Pix - R$20 Individual", price: 20, people: 1, kind: "Pix" },
   { id: "30_pix", label: "Pix - R$30 Individual", price: 20, people: 1, kind: "Pix" },
   { id: "30_pix", label: "Pix - R$30 Dupla", price: 30, people: 2, kind: "Pix" },
   { id: "50_pix", label: "Pix - R$50 Dupla", price: 50, people: 2, kind: "Pix" },
@@ -438,7 +439,7 @@ init();
 window.deleteEntry = deleteEntry;
 window.editEntry = editEntry;
 window.addEntry = addEntry;
-</script>
+</script>](https://terrah08.github.io/Casa-Teresa-e-Jorge/)
 
 </body>
 </html>
