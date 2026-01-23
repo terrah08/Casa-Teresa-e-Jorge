@@ -12,56 +12,50 @@
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
 <style>
-  .btn { @apply px-3 py-2 rounded-xl text-white shadow-md transition-all duration-200 active:scale-95; }
+  .btn { @apply rounded-xl text-white shadow-md transition-all duration-200 active:scale-95 flex flex-col items-center justify-center; }
   .hidden-value { filter: blur(6px); pointer-events: none; user-select: none; }
-  .title-nowrap { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   
-  /* Ajuste específico para os botões caberem em uma linha no mobile */
-  .btn-grid-text {
-    font-size: 9px; /* Diminuído para garantir a linha única */
-    line-height: 1.1;
-    white-space: nowrap;
-    letter-spacing: -0.02em;
-    padding-left: 4px;
-    padding-right: 4px;
-  }
+  /* Estilo dos textos dentro do botão */
+  .label-main { font-size: 10px; font-weight: 900; text-transform: uppercase; white-space: nowrap; }
+  .label-sub { font-size: 8px; font-weight: 500; opacity: 0.9; white-space: nowrap; margin-top: -2px; }
+
   @media (min-width: 640px) {
-    .btn-grid-text { font-size: 11px; }
+    .label-main { font-size: 12px; }
+    .label-sub { font-size: 9px; }
   }
 </style>
 </head>
-<body class="bg-gray-50 min-h-screen p-2 md:p-8 text-gray-800 font-sans">
+<body class="bg-gray-50 min-h-screen p-2 md:p-8 text-gray-800">
 
   <div class="max-w-6xl mx-auto">
-    <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6 bg-white p-4 rounded-xl shadow-sm border-b-2 border-pink-100">
+    <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6 bg-white p-4 rounded-xl shadow-sm">
       <div class="overflow-hidden">
-        <h1 class="text-lg sm:text-xl md:text-2xl font-black title-nowrap text-gray-800">
-          Casa Teresa e Jorge <span class="inline-block">🟩🩷</span>
+        <h1 class="text-lg sm:text-xl md:text-2xl font-black whitespace-nowrap">
+          Casa Teresa e Jorge 🟩🩷
         </h1>
-        <div class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Gestão de Portaria Profissional</div>
+        <div class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Gestão Profissional</div>
       </div>
 
       <div class="flex gap-2 items-center bg-gray-50 p-1.5 rounded-lg border border-gray-100 self-end md:self-auto">
         <input id="currentDate" type="date" class="border-0 bg-transparent text-xs font-bold focus:ring-0" />
-        <button id="resetDay" class="text-red-400 hover:text-red-600 px-2" title="Resetar Dia">🗑️</button>
+        <button id="resetDay" class="text-red-400 px-2">🗑️</button>
       </div>
     </header>
 
     <main class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       
       <section class="bg-white p-4 rounded-xl shadow col-span-1 border-t-4 border-blue-500">
-        <h2 class="font-bold text-gray-700 mb-4 flex items-center gap-2 text-sm uppercase">📝 Registrar Entrada</h2>
+        <h2 class="font-bold text-gray-700 mb-4 text-xs uppercase">📝 Entradas</h2>
         <div id="buttonsContainer" class="grid grid-cols-2 gap-2 mb-6"></div>
         <div class="space-y-2 border-t pt-4">
-          <button id="generateReport" class="w-full btn bg-blue-600 font-bold text-sm">📄 GERAR RELATÓRIO PDF</button>
-          <button id="exportCSV" class="w-full btn bg-slate-500 text-[10px] opacity-70">Exportar CSV</button>
+          <button id="generateReport" class="w-full py-3 bg-blue-600 rounded-xl text-white font-bold text-sm">📄 GERAR RELATÓRIO PDF</button>
         </div>
       </section>
 
       <section class="bg-white p-4 rounded-xl shadow col-span-2 border-t-4 border-emerald-500">
         <div class="grid grid-cols-2 gap-4 mb-6">
           <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-100">
-            <div class="text-[10px] text-emerald-600 font-bold uppercase">Público Total</div>
+            <div class="text-[10px] text-emerald-600 font-bold uppercase">Público</div>
             <div id="totalPeople" class="text-2xl font-black text-emerald-900">0</div>
           </div>
           <div class="bg-blue-50 p-3 rounded-xl border border-blue-100 relative">
@@ -73,11 +67,6 @@
           </div>
         </div>
 
-        <div class="flex justify-between items-center mb-4 px-1">
-          <h3 class="font-bold text-gray-700 text-xs italic uppercase tracking-widest">Fluxo Recente</h3>
-          <button id="toggleTable" class="text-[10px] font-bold bg-gray-100 px-3 py-1 rounded-full text-gray-500">TABELA</button>
-        </div>
-
         <div id="tableWrapper" class="overflow-x-auto rounded-lg">
           <table class="min-w-full text-xs">
             <thead class="bg-gray-50 text-gray-400 uppercase">
@@ -85,7 +74,7 @@
                 <th class="p-2 text-left">Hora</th>
                 <th class="p-2 text-left">Tipo</th>
                 <th class="p-2 text-right">Valor</th>
-                <th class="p-2 text-center">Ações</th>
+                <th class="p-2 text-center">✕</th>
               </tr>
             </thead>
             <tbody id="entriesBody" class="divide-y divide-gray-50"></tbody>
@@ -93,25 +82,19 @@
         </div>
       </section>
 
-      <section id="reportPanel" class="bg-white p-6 rounded-xl shadow-2xl col-span-3 hidden border-b-8 border-emerald-500">
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 border-b pb-4">
-          <div>
-            <h2 class="text-xl font-black text-gray-800 uppercase italic">Fechamento de Caixa</h2>
-            <p class="text-xs text-gray-400 font-bold">CASA TERESA E JORGE</p>
-          </div>
-          <div class="flex gap-2 w-full sm:w-auto">
-            <button id="downloadPdf" class="flex-1 btn bg-emerald-600 font-bold text-xs">💾 BAIXAR PDF</button>
-            <button id="closeReport" class="btn bg-gray-400 text-xs">FECHAR</button>
+      <section id="reportPanel" class="bg-white p-6 rounded-xl shadow-2xl col-span-3 hidden">
+        <div class="flex justify-between items-center mb-6 border-b pb-4">
+          <h2 class="text-xl font-black uppercase">Relatório de Fechamento</h2>
+          <div class="flex gap-2">
+            <button id="downloadPdf" class="btn bg-emerald-600 px-4 py-2 font-bold text-xs">BAIXAR PDF</button>
+            <button id="closeReport" class="btn bg-gray-400 px-4 py-2 text-xs">FECHAR</button>
           </div>
         </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div id="reportSummary" class="space-y-2 text-sm bg-gray-50 p-4 rounded-xl border"></div>
-          <div id="reportTotals" class="space-y-1"></div>
-          <div class="col-span-1 md:col-span-2 flex justify-center py-4 bg-white">
-            <div style="width: 100%; max-width: 380px;">
-              <canvas id="reportChart"></canvas>
-            </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div id="reportSummary" class="p-4 bg-gray-50 rounded-xl"></div>
+          <div id="reportTotals" class="p-4"></div>
+          <div class="col-span-1 md:col-span-2 flex justify-center">
+             <canvas id="reportChart" style="max-width: 300px;"></canvas>
           </div>
         </div>
       </section>
@@ -119,34 +102,34 @@
   </div>
 
 <script>
+// Dados organizados para 2 linhas: main (cima) e sub (baixo)
 const PRICE_TYPES = [
-  { id: "20_din", label: "Dinheiro R$20 Individual", price: 20, people: 1, kind: "Dinheiro" },
-  { id: "30_din", label: "Dinheiro R$30 Individual", price: 30, people: 1, kind: "Dinheiro" },
-  { id: "50_din", label: "Dinheiro R$50 Dupla", price: 50, people: 2, kind: "Dinheiro" },
-  { id: "20_cart", label: "Cartão R$20 Individual", price: 20, people: 1, kind: "Cartão" },
-  { id: "30_cart", label: "Cartão R$30 Individual", price: 30, people: 1, kind: "Cartão" },
-  { id: "50_cart", label: "Cartão R$50 Dupla", price: 50, people: 2, kind: "Cartão" },
-  { id: "30_pix", label: "Pix R$30 Individual", price: 30, people: 1, kind: "Pix" },
-  { id: "50_pix", label: "Pix R$50 Dupla", price: 50, people: 2, kind: "Pix" },
-  { id: "free100", label: "100 Pessoas FREE", price: 0, people: 100, kind: "Gratuidade" },
-  { id: "free", label: "Lista Individual", price: 0, people: 1, kind: "Gratuidade" },
-  { id: "aniversario", label: "Aniversário", price: 0, people: 1, kind: "Gratuidade" },
-  { id: "militar", label: "Militar", price: 0, people: 1, kind: "Gratuidade" }
+  { id: "20_din", main: "Dinheiro R$20", sub: "Individual", price: 20, people: 1, kind: "Dinheiro" },
+  { id: "30_din", main: "Dinheiro R$30", sub: "Individual", price: 30, people: 1, kind: "Dinheiro" },
+  { id: "50_din", main: "Dinheiro R$50", sub: "Dupla", price: 50, people: 2, kind: "Dinheiro" },
+  { id: "20_car", main: "Cartão R$20", sub: "Individual", price: 20, people: 1, kind: "Cartão" },
+  { id: "30_car", main: "Cartão R$30", sub: "Individual", price: 30, people: 1, kind: "Cartão" },
+  { id: "50_car", main: "Cartão R$50", sub: "Dupla", price: 50, people: 2, kind: "Cartão" },
+  { id: "30_pix", main: "Pix R$30", sub: "Individual", price: 30, people: 1, kind: "Pix" },
+  { id: "50_pix", main: "Pix R$50", sub: "Dupla", price: 50, people: 2, kind: "Pix" },
+  { id: "f100", main: "100 Pessoas", sub: "FREE", price: 0, people: 100, kind: "Gratuidade" },
+  { id: "list", main: "Lista", sub: "Individual", price: 0, people: 1, kind: "Gratuidade" },
+  { id: "aniv", main: "Aniversário", sub: "Isento", price: 0, people: 1, kind: "Gratuidade" },
+  { id: "milt", main: "Militar", sub: "Isento", price: 0, people: 1, kind: "Gratuidade" }
 ];
 
 const buttonsContainer = document.getElementById('buttonsContainer');
 PRICE_TYPES.forEach(p => {
   const b = document.createElement('button');
-  // Aplicação da classe btn-grid-text para forçar linha única
-  b.className = 'btn-grid-text py-2.5 rounded-lg text-white font-black shadow uppercase transition-all active:scale-95';
+  b.className = 'btn h-14'; // Altura fixa para manter o padrão
   
   if (p.kind === "Dinheiro") b.classList.add("bg-green-600");
   else if (p.kind === "Cartão") b.classList.add("bg-amber-500");
   else if (p.kind === "Pix") b.classList.add("bg-cyan-600");
-  else if (p.id === "free100") b.classList.add("bg-purple-600");
+  else if (p.id === "f100") b.classList.add("bg-purple-600");
   else b.classList.add("bg-gray-400");
   
-  b.textContent = p.label;
+  b.innerHTML = `<span class="label-main">${p.main}</span><span class="label-sub">${p.sub}</span>`;
   b.onclick = () => addEntry(p.id);
   buttonsContainer.appendChild(b);
 });
@@ -163,26 +146,23 @@ document.getElementById('toggleValue').onclick = () => {
   isValueVisible = !isValueVisible;
   document.getElementById('eyeIcon').textContent = isValueVisible ? '👁️' : '🙈';
   document.getElementById('totalCollected').classList.toggle('hidden-value', !isValueVisible);
-  document.querySelectorAll('.val-td').forEach(td => td.classList.toggle('hidden-value', !isValueVisible));
 };
 
 function load() {
-  const data = localStorage.getItem(`pj_ctj_${currentDate}`);
+  const data = localStorage.getItem(`ctj_${currentDate}`);
   entries = data ? JSON.parse(data) : [];
   render();
 }
 
 function render() {
   const body = document.getElementById('entriesBody');
-  const blur = isValueVisible ? '' : 'hidden-value';
-  
   body.innerHTML = entries.map(e => `
     <tr>
       <td class="p-2 text-gray-400 font-mono">${new Date(e.ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</td>
-      <td class="p-2 font-bold text-gray-600 text-[10px]">${e.type}</td>
-      <td class="p-2 text-right font-black val-td ${blur}">R$ ${e.price.toFixed(2)}</td>
+      <td class="p-2 font-bold text-gray-600">${e.type}</td>
+      <td class="p-2 text-right font-black ${isValueVisible ? '' : 'hidden-value'}">R$ ${e.price.toFixed(2)}</td>
       <td class="p-2 text-center">
-        <button onclick="deleteEntry(${e.id})" class="text-red-300 hover:text-red-500 px-2">✕</button>
+        <button onclick="deleteEntry(${e.id})" class="text-red-300 px-2">✕</button>
       </td>
     </tr>
   `).join('');
@@ -194,15 +174,15 @@ function render() {
 
 function addEntry(id) {
   const t = PRICE_TYPES.find(x => x.id === id);
-  entries.unshift({ id: Date.now(), ts: new Date().toISOString(), type: t.label, price: t.price, people: t.people, kind: t.kind });
-  localStorage.setItem(`pj_ctj_${currentDate}`, JSON.stringify(entries));
+  entries.unshift({ id: Date.now(), ts: new Date().toISOString(), type: t.main + ' ' + t.sub, price: t.price, people: t.people, kind: t.kind });
+  localStorage.setItem(`ctj_${currentDate}`, JSON.stringify(entries));
   render();
 }
 
 window.deleteEntry = (id) => {
-  if(!confirm('Excluir registro?')) return;
+  if(!confirm('Excluir?')) return;
   entries = entries.filter(e => e.id !== id);
-  localStorage.setItem(`pj_ctj_${currentDate}`, JSON.stringify(entries));
+  localStorage.setItem(`ctj_${currentDate}`, JSON.stringify(entries));
   render();
 };
 
@@ -222,16 +202,16 @@ function generateVisual() {
   });
 
   document.getElementById('reportSummary').innerHTML = `
-    <h3 class="font-black text-emerald-700 uppercase border-b mb-2 text-xs">Resumo de Caixa</h3>
-    <p class="flex justify-between">Data: <b>${currentDate.split('-').reverse().join('/')}</b></p>
-    <p class="flex justify-between">Público: <b>${totals.p}p</b></p>
-    <p class="flex justify-between text-base">Líquido: <b>R$ ${totals.v.toFixed(2)}</b></p>
+    <h3 class="font-black text-emerald-700 uppercase mb-2">Geral</h3>
+    <p>Data: <b>${currentDate.split('-').reverse().join('/')}</b></p>
+    <p>Total Público: <b>${totals.p}</b></p>
+    <p>Total Caixa: <b>R$ ${totals.v.toFixed(2)}</b></p>
   `;
 
   document.getElementById('reportTotals').innerHTML = Object.entries(byKind).map(([k, v]) => `
     <div class="flex justify-between border-b py-2 text-[10px]">
       <span class="text-gray-400 font-bold uppercase">${k}</span>
-      <span class="font-black text-gray-700">R$ ${v.v.toFixed(2)} (${v.p}p)</span>
+      <span class="font-black">R$ ${v.v.toFixed(2)} (${v.p}p)</span>
     </div>
   `).join('');
 
@@ -244,44 +224,21 @@ function generateVisual() {
       datasets: [{ data: Object.values(byKind).map(x => x.v), backgroundColor: ['#10b981', '#f59e0b', '#06b6d4', '#8b5cf6', '#64748b'] }]
     },
     plugins: [ChartDataLabels],
-    options: { 
-      plugins: { 
-        legend: { position: 'bottom', labels: { boxWidth: 8, font: { size: 9 } } },
-        datalabels: { color: '#fff', font: { weight: 'bold', size: 9 }, formatter: (v) => v > 0 ? `R$${v.toFixed(0)}` : '' }
-      }
-    }
+    options: { plugins: { legend: { display: false }, datalabels: { color: '#fff', font: { weight: 'bold' }, formatter: v => v > 0 ? v : '' } } }
   });
 }
 
 document.getElementById('downloadPdf').onclick = async () => {
-  const btnPdf = document.getElementById('downloadPdf');
-  const btnClose = document.getElementById('closeReport');
-  btnPdf.style.display = 'none';
-  btnClose.style.display = 'none';
-
-  await new Promise(r => setTimeout(r, 600));
-
   const panel = document.getElementById('reportPanel');
-  const canvas = await html2canvas(panel, { scale: 2, useCORS: true });
-  
+  const canvas = await html2canvas(panel, { scale: 2 });
   const imgData = canvas.toDataURL('image/png');
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF('p', 'mm', 'a4');
-  const imgW = 190;
-  const imgH = (canvas.height * imgW) / canvas.width;
-
-  pdf.setFontSize(14);
-  pdf.text(`CASA TERESA E JORGE - CAIXA ${currentDate}`, 10, 15);
-  pdf.addImage(imgData, 'PNG', 10, 20, imgW, imgH);
+  pdf.addImage(imgData, 'PNG', 10, 10, 190, (canvas.height * 190) / canvas.width);
   pdf.save(`caixa_${currentDate}.pdf`);
-
-  btnPdf.style.display = '';
-  btnClose.style.display = '';
 };
 
 document.getElementById('closeReport').onclick = () => document.getElementById('reportPanel').classList.add('hidden');
-document.getElementById('toggleTable').onclick = () => document.getElementById('tableWrapper').classList.toggle('hidden');
-document.getElementById('resetDay').onclick = () => { if(confirm('Zerar hoje?')) { entries=[]; localStorage.removeItem(`pj_ctj_${currentDate}`); render(); } };
 currentDateEl.onchange = (e) => { currentDate = e.target.value; load(); };
 
 load();
