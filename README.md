@@ -119,4 +119,141 @@ const PRICE_TYPES = [
   { id: "50_pix", main: "Pix R$50", sub: "Dupla", price: 50, people: 2, kind: "Pix" },
   { id: "f100", main: "100 Pessoas", sub: "FREE", price: 0, people: 100, kind: "Gratuidade" },
   { id: "list", main: "Lista", sub: "Individual", price: 0, people: 1, kind: "Gratuidade" },
-  { id: "aniv", main: "Aniversário", sub
+  { id: "aniv", main: "Aniversário", sub: "Isento", price: 0, people: 1, kind: "Gratuidade" },
+  { id: "milt", main: "Militar", sub: "Isento", price: 0, people: 1, kind: "Gratuidade" }
+];
+
+const buttonsContainer = document.getElementById('buttonsContainer');
+PRICE_TYPES.forEach(p => {
+  const b = document.createElement('button');
+  b.className = 'btn h-14'; 
+  if (p.kind === "Dinheiro") b.classList.add("bg-green-600");
+  else if (p.kind === "Cartão") b.classList.add("bg-amber-500");
+  else if (p.kind === "Pix") b.classList.add("bg-cyan-600");
+  else if (p.id === "f100") b.classList.add("bg-purple-600");
+  else b.classList.add("bg-gray-400");
+  b.innerHTML = `<span class="label-main">${p.main}</span><span class="label-sub">${p.sub}</span>`;
+  b.onclick = () => addEntry(p.id);
+  buttonsContainer.appendChild(b);
+});
+
+let currentDate = new Date().toISOString().slice(0,10);
+let entries = [];
+let isValueVisible = true;
+let reportChart = null;
+
+document.getElementById('currentDate').value = currentDate;
+document.getElementById('toggleValue').onclick = () => {
+  isValueVisible = !isValueVisible;
+  document.getElementById('eyeIcon').textContent = isValueVisible ? '👁️' : '🙈';
+  document.getElementById('totalCollected').classList.toggle('hidden-value', !isValueVisible);
+};
+
+function load() {
+  const data = localStorage.getItem(`ctj_v2_${currentDate}`);
+  entries = data ? JSON.parse(data) : [];
+  render();
+}
+
+function render() {
+  const body = document.getElementById('entriesBody');
+  const blur = isValueVisible ? '' : 'hidden-value';
+  body.innerHTML = entries.map(e => `
+    <tr>
+      <td class="p-2 text-gray-400 font-mono">${new Date(e.ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</td>
+      <td class="p-2 font-bold text-gray-600 text-[10px] uppercase">${e.type}</td>
+      <td class="p-2 text-right font-black ${blur}">R$ ${e.price.toFixed(2)}</td>
+      <td class="p-2 text-center"><button onclick="deleteEntry(${e.id})" class="text-red-300 px-2">✕</button></td>
+    </tr>
+  `).join('');
+  const totals = entries.reduce((a, b) => ({ p: a.p + b.people, v: a.v + b.price }), { p: 0, v: 0 });
+  document.getElementById('totalPeople').textContent = totals.p;
+  document.getElementById('totalCollected').textContent = `R$ ${totals.v.toFixed(2)}`;
+}
+
+function addEntry(id) {
+  const t = PRICE_TYPES.find(x => x.id === id);
+  entries.unshift({ id: Date.now(), ts: new Date().toISOString(), type: t.main + ' ' + t.sub, price: t.price, people: t.people, kind: t.kind });
+  localStorage.setItem(`ctj_v2_${currentDate}`, JSON.stringify(entries));
+  render();
+}
+
+window.deleteEntry = (id) => {
+  if(confirm('Excluir?')) { entries = entries.filter(e => e.id !== id); localStorage.setItem(`ctj_v2_${currentDate}`, JSON.stringify(entries)); render(); }
+};
+
+document.getElementById('generateReport').onclick = () => {
+  document.getElementById('reportPanel').classList.remove('hidden');
+  generateVisual();
+  document.getElementById('reportPanel').scrollIntoView({ behavior: 'smooth' });
+};
+
+function generateVisual() {
+  const byKind = {};
+  entries.forEach(e => {
+    byKind[e.kind] = byKind[e.kind] || { p: 0, v: 0 };
+    byKind[e.kind].p += e.people;
+    byKind[e.kind].v += e.price;
+  });
+
+  const totals = entries.reduce((a, b) => ({ p: a.p + b.people, v: a.v + b.price }), { p: 0, v: 0 });
+  document.getElementById('reportSummary').innerHTML = `<p class="flex justify-between">Público: <b>${totals.p}p</b></p><p class="flex justify-between text-base">Líquido: <b>R$ ${totals.v.toFixed(2)}</b></p>`;
+  document.getElementById('reportTotals').innerHTML = Object.entries(byKind).map(([k, v]) => `<div class="flex justify-between border-b py-2 text-[10px] uppercase"><span class="text-gray-400 font-bold">${k}</span><span class="font-black text-gray-700">R$ ${v.v.toFixed(2)} (${v.p}p)</span></div>`).join('');
+
+  if(reportChart) reportChart.destroy();
+  const ctx = document.getElementById('reportChart').getContext('2d');
+  reportChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: Object.keys(byKind),
+      datasets: [{ data: Object.values(byKind).map(x => x.v), backgroundColor: ['#10b981', '#f59e0b', '#06b6d4', '#8b5cf6', '#64748b'] }]
+    },
+    plugins: [ChartDataLabels],
+    options: { 
+      animation: false, 
+      responsive: true, 
+      maintainAspectRatio: true,
+      plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } }, datalabels: { color: '#fff', font: { weight: 'bold', size: 11 }, formatter: v => v > 0 ? `R$${v.toFixed(0)}` : '' } }
+    }
+  });
+}
+
+document.getElementById('downloadPdf').onclick = async () => {
+  const btnPdf = document.getElementById('downloadPdf');
+  const btnClose = document.getElementById('closeReport');
+  btnPdf.style.display = 'none'; btnClose.style.display = 'none';
+
+  // Força o gráfico a virar uma imagem sólida antes do PDF
+  const chartCanvas = document.getElementById('reportChart');
+  const chartImg = new Image();
+  chartImg.src = chartCanvas.toDataURL("image/png");
+  chartImg.style.width = "100%";
+  
+  const wrapper = document.getElementById('chartWrapper');
+  const originalContent = wrapper.innerHTML;
+  wrapper.innerHTML = ''; 
+  wrapper.appendChild(chartImg); // Troca o canvas pela imagem estática
+
+  await new Promise(r => setTimeout(r, 1000));
+
+  try {
+    const canvas = await html2canvas(document.getElementById('reportPanel'), { scale: 2, useCORS: true });
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 10, 20, 190, (canvas.height * 190) / canvas.width);
+    pdf.save(`caixa_${currentDate}.pdf`);
+  } catch (e) { alert("Erro ao gerar PDF"); }
+
+  wrapper.innerHTML = originalContent; // Volta o canvas original
+  generateVisual(); // Redesenha
+  btnPdf.style.display = 'block'; btnClose.style.display = 'block';
+};
+
+document.getElementById('closeReport').onclick = () => document.getElementById('reportPanel').classList.add('hidden');
+document.getElementById('resetDay').onclick = () => { if(confirm('Zerar hoje?')) { entries=[]; localStorage.removeItem(`ctj_v2_${currentDate}`); render(); } };
+document.getElementById('currentDate').onchange = (e) => { currentDate = e.target.value; load(); };
+
+load();
+</script>
+</body>
+</html>
