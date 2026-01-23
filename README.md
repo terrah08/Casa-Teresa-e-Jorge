@@ -44,12 +44,12 @@
       <section class="bg-white p-4 rounded-xl shadow col-span-2 border-t-4 border-emerald-500">
         <div class="grid grid-cols-2 gap-4 mb-6">
           <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-100 text-center">
-            <div class="text-[10px] text-emerald-600 font-bold uppercase">Público</div>
+            <div class="text-[10px] text-emerald-600 font-bold uppercase">Público Total</div>
             <div id="totalPeople" class="text-4xl font-black text-emerald-900">0</div>
           </div>
           <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 relative text-center">
             <div class="flex justify-between items-center px-2">
-              <div class="text-[10px] text-blue-600 font-bold uppercase">Caixa</div>
+              <div class="text-[10px] text-blue-600 font-bold uppercase">Caixa Total</div>
               <button onclick="toggleBlur()" class="text-sm"> <span id="eyeIcon">👁️</span> </button>
             </div>
             <div id="totalCollected" class="text-4xl font-black text-blue-900">R$ 0,00</div>
@@ -82,7 +82,10 @@
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div id="reportSummary" class="bg-gray-50 p-5 rounded-2xl border space-y-3"></div>
-          <div id="reportTotals" class="space-y-1"></div>
+          <div class="space-y-4">
+             <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest border-b pb-1">Pessoas por Categoria</h3>
+             <div id="reportTotals" class="space-y-1"></div>
+          </div>
           <div id="chartWrapper">
             <canvas id="reportChart"></canvas>
           </div>
@@ -117,13 +120,10 @@ let currentDate = new Date().toISOString().slice(0,10);
 function renderButtons() {
   const container = document.getElementById('buttonsContainer');
   container.innerHTML = '';
-  
-  // Contar quantas pessoas já entraram pelo botão "100 Pessoas"
   const count100 = entries.filter(e => e.type.includes("100 Pessoas")).length;
 
   PRICE_TYPES.forEach(p => {
     const b = document.createElement('button');
-    let label = p.label;
     let sub = p.sub;
     let disabled = false;
 
@@ -134,20 +134,12 @@ function renderButtons() {
     }
 
     b.className = `p-2 h-14 rounded-lg text-white flex flex-col items-center justify-center transition-all ${disabled ? 'btn-disabled' : (p.kind === 'Dinheiro' ? 'bg-green-600' : p.kind === 'Cartão' ? 'bg-amber-500' : p.kind === 'Pix' ? 'bg-cyan-600' : 'bg-gray-400')}`;
-    
-    let subHtml = "";
-    if (sub) {
-        const isDestaque = sub === "Individual" || sub === "Dupla" || p.isCounter;
-        subHtml = `<span class="text-[9px] mt-1 ${isDestaque ? 'font-black bg-black/20 px-2 rounded-full border border-white/10' : 'opacity-80'}">${sub}</span>`;
-    }
-
-    b.innerHTML = `<span class="text-[10px] font-black uppercase leading-none">${label}</span>${subHtml}`;
+    let subHtml = p.sub || p.isCounter ? `<span class="text-[9px] mt-1 font-black bg-black/20 px-2 rounded-full border border-white/10">${sub}</span>` : "";
+    b.innerHTML = `<span class="text-[10px] font-black uppercase leading-none">${p.label}</span>${subHtml}`;
     if (!disabled) b.onclick = () => addEntry(p);
     container.appendChild(b);
   });
 }
-
-function toggleBlur() { isValueVisible = !isValueVisible; document.getElementById('eyeIcon').textContent = isValueVisible ? '👁️' : '🙈'; render(); }
 
 function load() {
   const data = localStorage.getItem(`ctj_final_${currentDate}`);
@@ -160,7 +152,7 @@ function render() {
   const body = document.getElementById('entriesBody');
   const blurClass = isValueVisible ? '' : 'hidden-value';
   body.innerHTML = entries.map(e => `
-    <tr class="hover:bg-gray-50">
+    <tr class="hover:bg-gray-50 border-b border-gray-50">
       <td class="p-3 text-gray-400 font-mono">${e.time}</td>
       <td class="p-3 font-bold text-gray-700 uppercase text-[10px]">${e.type}</td>
       <td class="p-3 text-right font-black ${blurClass}">R$ ${e.price.toFixed(2)}</td>
@@ -171,7 +163,6 @@ function render() {
   const totals = entries.reduce((a, b) => ({ p: a.p + b.people, v: a.v + b.price }), { p: 0, v: 0 });
   document.getElementById('totalPeople').textContent = totals.p;
   document.getElementById('totalCollected').textContent = `R$ ${totals.v.toFixed(2)}`;
-  document.getElementById('totalCollected').classList.toggle('hidden-value', !isValueVisible);
 }
 
 function addEntry(p) {
@@ -182,45 +173,47 @@ function addEntry(p) {
 }
 
 window.deleteEntry = (id) => {
-  if(confirm('Remover este registro?')) {
-    entries = entries.filter(e => e.id !== id);
-    localStorage.setItem(`ctj_final_${currentDate}`, JSON.stringify(entries));
-    render();
-  }
+  if(confirm('Remover registro?')) { entries = entries.filter(e => e.id !== id); localStorage.setItem(`ctj_final_${currentDate}`, JSON.stringify(entries)); render(); }
 };
 
 document.getElementById('btnOpenReport').onclick = () => {
-  if(entries.length === 0) return alert("Nenhum dado para o relatório.");
+  if(entries.length === 0) return alert("Sem dados.");
   document.getElementById('reportPanel').classList.remove('hidden');
-  const totals = entries.reduce((a, b) => ({ p: a.p + b.people, v: a.v + b.price }), { p: 0, v: 0 });
-  const byKind = {};
-  entries.forEach(e => byKind[e.kind] = (byKind[e.kind] || 0) + e.price);
   
+  const totals = entries.reduce((a, b) => ({ p: a.p + b.people, v: a.v + b.price }), { p: 0, v: 0 });
+  const stats = {};
+  entries.forEach(e => {
+    if(!stats[e.kind]) stats[e.kind] = { money: 0, people: 0 };
+    stats[e.kind].money += e.price;
+    stats[e.kind].people += e.people;
+  });
+
   const times = entries.map(e => e.timestamp).sort();
   const first = new Date(times[0]).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
   const last = new Date(times[times.length-1]).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-  const avg = totals.p > 0 ? (totals.v / totals.p).toFixed(2) : "0.00";
 
   document.getElementById('reportSummary').innerHTML = `
-    <h3 class="font-black text-emerald-700 uppercase text-[10px] tracking-widest">Métricas</h3>
+    <h3 class="font-black text-emerald-700 uppercase text-[10px]">Resumo do Evento</h3>
     <div class="flex justify-between text-xs"><span>Início:</span><b>${first}</b></div>
-    <div class="flex justify-between text-xs"><span>Último:</span><b>${last}</b></div>
-    <div class="flex justify-between text-sm border-t pt-2 mt-2"><span>Público:</span><b>${totals.p}p</b></div>
-    <div class="flex justify-between text-sm"><span>Ticket Médio:</span><b class="text-blue-500">R$ ${avg}</b></div>
-    <div class="flex justify-between text-xl font-black mt-4 pt-2 border-t-2"><span>CAIXA:</span><span class="text-emerald-600">R$ ${totals.v.toFixed(2)}</span></div>
+    <div class="flex justify-between text-xs"><span>Fim:</span><b>${last}</b></div>
+    <div class="flex justify-between text-sm border-t pt-2 mt-2"><span>Ticket Médio:</span><b class="text-blue-500">R$ ${(totals.v/totals.p).toFixed(2)}</b></div>
+    <div class="flex justify-between text-2xl font-black mt-4 border-t-2 pt-2"><span>CAIXA:</span><span class="text-emerald-600">R$ ${totals.v.toFixed(2)}</span></div>
   `;
 
-  document.getElementById('reportTotals').innerHTML = Object.entries(byKind).map(([k, v]) => `
-    <div class="flex justify-between border-b py-2 text-[10px] uppercase">
-      <span class="text-gray-400 font-bold">${k}</span>
-      <span class="font-black text-gray-700">R$ ${v.toFixed(2)}</span>
+  document.getElementById('reportTotals').innerHTML = Object.entries(stats).map(([k, v]) => `
+    <div class="flex justify-between items-center border-b py-2">
+      <div>
+        <div class="text-[10px] font-black uppercase text-gray-700">${k}</div>
+        <div class="text-[9px] text-gray-400 font-bold">${v.people} pessoas</div>
+      </div>
+      <div class="font-black text-gray-600 text-xs">R$ ${v.money.toFixed(2)}</div>
     </div>
   `).join('');
 
   if(chartInstance) chartInstance.destroy();
   chartInstance = new Chart(document.getElementById('reportChart'), {
     type: 'doughnut',
-    data: { labels: Object.keys(byKind), datasets: [{ data: Object.values(byKind), backgroundColor: ['#10b981', '#f59e0b', '#06b6d4', '#cbd5e1'] }] },
+    data: { labels: Object.keys(stats), datasets: [{ data: Object.values(stats).map(v => v.money), backgroundColor: ['#10b981', '#f59e0b', '#06b6d4', '#cbd5e1'] }] },
     plugins: [ChartDataLabels],
     options: { responsive: true, animation: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 9 } } }, datalabels: { color: '#000', font: { weight: 'bold', size: 9 }, formatter: v => v > 0 ? `R$${v.toFixed(0)}` : '' } } }
   });
@@ -231,40 +224,39 @@ document.getElementById('downloadPdf').onclick = () => {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
   const totals = entries.reduce((a, b) => ({ p: a.p + b.people, v: a.v + b.price }), { p: 0, v: 0 });
-  const byKind = {};
-  entries.forEach(e => byKind[e.kind] = (byKind[e.kind] || 0) + e.price);
-  const times = entries.map(e => e.timestamp).sort();
-  const first = new Date(times[0]).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-  const last = new Date(times[times.length-1]).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  const stats = {};
+  entries.forEach(e => {
+    if(!stats[e.kind]) stats[e.kind] = { money: 0, people: 0 };
+    stats[e.kind].money += e.price;
+    stats[e.kind].people += e.people;
+  });
 
   doc.setFontSize(22); doc.text("CASA TERESA E JORGE", 105, 20, { align: "center" });
-  doc.setFontSize(10); doc.text(`DATA: ${currentDate.split('-').reverse().join('/')}`, 105, 28, { align: "center" });
+  doc.setFontSize(10); doc.text(`RELATORIO DE FECHAMENTO - ${currentDate.split('-').reverse().join('/')}`, 105, 28, { align: "center" });
   doc.line(15, 32, 195, 32);
 
   doc.setFontSize(12); doc.setFont(undefined, 'bold');
-  doc.text("RESUMO CONSOLIDADO", 15, 45);
+  doc.text("RESUMO GERAL", 15, 45);
   doc.setFontSize(10); doc.setFont(undefined, 'normal');
-  doc.text(`Primeira Entrada: ${first} | Ultima Entrada: ${last}`, 15, 55);
-  doc.text(`Publico Total: ${totals.p} pessoas`, 15, 62);
-  doc.text(`Ticket Medio: R$ ${(totals.v/totals.p).toFixed(2)}`, 15, 69);
+  doc.text(`Publico Total: ${totals.p} pessoas`, 15, 55);
+  doc.text(`Valor Total Arrecadado: R$ ${totals.v.toFixed(2)}`, 15, 62);
   
-  doc.setFontSize(14); doc.setFont(undefined, 'bold');
-  doc.setTextColor(16, 185, 129);
-  doc.text(`VALOR TOTAL EM CAIXA: R$ ${totals.v.toFixed(2)}`, 15, 85);
-
-  doc.setTextColor(0); doc.setFontSize(11);
-  doc.text("POR MEIO DE PAGAMENTO:", 15, 100);
-  let currentY = 110;
-  Object.entries(byKind).forEach(([k, v]) => {
-    doc.setFont(undefined, 'normal'); doc.text(`${k}:`, 20, currentY);
-    doc.setFont(undefined, 'bold'); doc.text(`R$ ${v.toFixed(2)}`, 70, currentY);
-    currentY += 8;
+  doc.setFont(undefined, 'bold');
+  doc.text("DETALHAMENTO POR CATEGORIA:", 15, 75);
+  let currentY = 85;
+  Object.entries(stats).forEach(([k, v]) => {
+    doc.setFont(undefined, 'bold');
+    doc.text(`${k}:`, 20, currentY);
+    doc.setFont(undefined, 'normal');
+    doc.text(`${v.people} pessoas`, 60, currentY);
+    doc.text(`Subtotal: R$ ${v.money.toFixed(2)}`, 110, currentY);
+    currentY += 10;
   });
 
-  doc.save(`Relatorio_${currentDate}.pdf`);
+  doc.save(`Fechamento_${currentDate}.pdf`);
 };
 
-document.getElementById('resetDay').onclick = () => { if(confirm('Zerar portaria de hoje?')) { entries=[]; localStorage.removeItem(`ctj_final_${currentDate}`); render(); } };
+document.getElementById('resetDay').onclick = () => { if(confirm('Zerar hoje?')) { entries=[]; localStorage.removeItem(`ctj_final_${currentDate}`); render(); } };
 const dateEl = document.getElementById('currentDate');
 dateEl.value = currentDate;
 dateEl.onchange = (e) => { currentDate = e.target.value; load(); };
