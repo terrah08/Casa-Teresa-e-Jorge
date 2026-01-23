@@ -2,7 +2,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Portaria - Segunda Sem Leite (Relatório Profissional)</title>
+<title>Portaria -  Casa Teresa e Jorge🟩🩷 (Relatório Profissional)</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
 
@@ -30,7 +30,7 @@
     <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
       <div class="flex items-center gap-4">
         <div>
-          <h1 class="text-2xl md:text-3xl font-extrabold">Portaria - Segunda Sem Leite 🥛🚫</h1>
+          <h1 class="text-2xl md:text-3xl font-extrabold"> Casa Teresa e Jorge🟩🩷</h1>
           <div class="text-sm text-gray-500">Controle de entradas, arrecadação e relatórios profissionais</div>
         </div>
       </div>
