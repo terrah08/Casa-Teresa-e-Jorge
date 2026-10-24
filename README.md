@@ -97,6 +97,7 @@
 
 <script>
 const PRICE_TYPES = [
+   { id: "13_din", label: "Dinheiro R$13⭐️", sub: "Individual", price: 13, people: 1, kind: "Dinheiro" },
   { id: "20_din", label: "Dinheiro R$20", sub: "Individual", price: 20, people: 1, kind: "Dinheiro" },
   { id: "30_din", label: "Dinheiro R$30", sub: "Individual", price: 30, people: 1, kind: "Dinheiro" },
   { id: "30_din", label: "Dinheiro R$30", sub: "Dupla", price: 30, people: 2, kind: "Dinheiro" },
